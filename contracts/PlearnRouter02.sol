@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.8.0;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@plearn/core/contracts/interfaces/IPlearnFactory.sol";
@@ -13,7 +13,7 @@ import "./interfaces/IWETH.sol";
 import "./libraries/PlearnLibrary.sol";
 import "./libraries/TransferHelper.sol";
 
-contract PlearnRouter02 is IPlearnRouter02, Ownable {
+contract PlearnRouter02 is IPlearnRouter02, OwnableUpgradeable {
     using SafeMath for uint256;
 
     address public override factory;
@@ -25,7 +25,13 @@ contract PlearnRouter02 is IPlearnRouter02, Ownable {
         _;
     }
 
-    constructor(address _factory, address _WETH) {
+    // constructor(address _factory, address _WETH) {
+    //     factory = _factory;
+    //     WETH = _WETH;
+    // }
+
+    function initialize(address _factory, address _WETH) public initializer {
+        __Ownable_init();
         factory = _factory;
         WETH = _WETH;
     }
@@ -574,9 +580,9 @@ contract PlearnRouter02 is IPlearnRouter02, Ownable {
                 (uint256 reserveInput, uint256 reserveOutput) = input == token0
                     ? (reserve0, reserve1)
                     : (reserve1, reserve0);
-                amountInput = IERC20(input)
-                    .balanceOf(address(pair))
-                    .sub(reserveInput);
+                amountInput = IERC20(input).balanceOf(address(pair)).sub(
+                    reserveInput
+                );
                 amountOutput = PlearnLibrary.getAmountOut(
                     amountInput,
                     reserveInput,
@@ -615,13 +621,11 @@ contract PlearnRouter02 is IPlearnRouter02, Ownable {
             PlearnLibrary.pairFor(factory, path[0], path[1]),
             amountIn
         );
-        uint256 balanceBefore = IERC20(path[path.length - 1])
-            .balanceOf(to);
+        uint256 balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to);
         require(
-            IERC20(path[path.length - 1]).balanceOf(to).sub(
-                balanceBefore
-            ) >= amountOutMin,
+            IERC20(path[path.length - 1]).balanceOf(to).sub(balanceBefore) >=
+                amountOutMin,
             "PlearnRouter: INSUFFICIENT_OUTPUT_AMOUNT"
         );
     }
@@ -641,13 +645,11 @@ contract PlearnRouter02 is IPlearnRouter02, Ownable {
                 amountIn
             )
         );
-        uint256 balanceBefore = IERC20(path[path.length - 1])
-            .balanceOf(to);
+        uint256 balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to);
         require(
-            IERC20(path[path.length - 1]).balanceOf(to).sub(
-                balanceBefore
-            ) >= amountOutMin,
+            IERC20(path[path.length - 1]).balanceOf(to).sub(balanceBefore) >=
+                amountOutMin,
             "PlearnRouter: INSUFFICIENT_OUTPUT_AMOUNT"
         );
     }
