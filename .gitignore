@@ -1,0 +1,11 @@
+#Buidler files
+artifacts/
+build/
+buildV1/
+cache/
+node_modules/
+
+#Deploy and config
+scripts/deploy.js
+secrets.json
+yarn.lock
