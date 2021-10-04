@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.8.0;
 
-import "@pancake/core/contracts/interfaces/IPancakePair.sol";
+import "@plearn/core/contracts/interfaces/IPlearnPair.sol";
 
 import "./FixedPoint.sol";
 
-// library with helper methods for oracles that are concerned with computing average prices
 library PlearnOracleLibrary {
     using FixedPoint for *;
 
@@ -25,15 +24,15 @@ library PlearnOracleLibrary {
         )
     {
         blockTimestamp = currentBlockTimestamp();
-        price0Cumulative = IPancakePair(pair).price0CumulativeLast();
-        price1Cumulative = IPancakePair(pair).price1CumulativeLast();
+        price0Cumulative = IPlearnPair(pair).price0CumulativeLast();
+        price1Cumulative = IPlearnPair(pair).price1CumulativeLast();
 
         // if time has elapsed since the last update on the pair, mock the accumulated price values
         (
             uint112 reserve0,
             uint112 reserve1,
             uint32 blockTimestampLast
-        ) = IPancakePair(pair).getReserves();
+        ) = IPlearnPair(pair).getReserves();
         if (blockTimestampLast != blockTimestamp) {
             // subtraction overflow is desired
             uint32 timeElapsed = blockTimestamp - blockTimestampLast;

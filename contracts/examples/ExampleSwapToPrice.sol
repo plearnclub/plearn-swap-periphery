@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.8.0;
 
-import "@pancake/core/contracts/interfaces/IPancakePair.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@plearn/core/contracts/interfaces/IPlearnPair.sol";
 
 import "../libraries/Babylonian.sol";
-import "../interfaces/IERC20.sol";
 import "../interfaces/IPlearnRouter01.sol";
 import "../libraries/PlearnLibrary.sol";
-import "../libraries/SafeMath.sol";
 import "../libraries/TransferHelper.sol";
 
 contract ExampleSwapToPrice {

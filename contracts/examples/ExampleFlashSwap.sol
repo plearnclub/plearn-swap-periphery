@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.8.0;
 
-import "@pancake/core/contracts/interfaces/IPancakeCallee.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@plearn/core/contracts/interfaces/IPlearnCallee.sol";
 
 import "../libraries/PlearnLibrary.sol";
 import "../interfaces/V1/IPlearnV1Factory.sol";
 import "../interfaces/V1/IPlearnV1Exchange.sol";
 import "../interfaces/IPlearnRouter01.sol";
-import "../interfaces/IERC20.sol";
 import "../interfaces/IWETH.sol";
 
-contract ExampleFlashSwap is IPancakeCallee {
+contract ExampleFlashSwap is IPlearnCallee {
     IPlearnV1Factory immutable factoryV1;
     address immutable factory;
     IWETH immutable WETH;
@@ -30,7 +30,7 @@ contract ExampleFlashSwap is IPancakeCallee {
     receive() external payable {}
 
     // gets tokens/WETH via a V2 flash swap, swaps for the ETH/tokens on V1, repays V2, and keeps the rest!
-    function pancakeCall(
+    function plearnCall(
         address sender,
         uint256 amount0,
         uint256 amount1,
@@ -41,8 +41,8 @@ contract ExampleFlashSwap is IPancakeCallee {
         uint256 amountETH;
         {
             // scope for token{0,1}, avoids stack too deep errors
-            address token0 = IPancakePair(msg.sender).token0();
-            address token1 = IPancakePair(msg.sender).token1();
+            address token0 = IPlearnPair(msg.sender).token0();
+            address token1 = IPlearnPair(msg.sender).token1();
             assert(
                 msg.sender == PlearnLibrary.pairFor(factory, token0, token1)
             ); // ensure that msg.sender is actually a V2 pair

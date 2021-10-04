@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.8.0;
 
-import "@pancake/core/contracts/interfaces/IPancakeFactory.sol";
-import "@pancake/core/contracts/interfaces/IPancakePair.sol";
+import "@plearn/core/contracts/interfaces/IPlearnFactory.sol";
+import "@plearn/core/contracts/interfaces/IPlearnPair.sol";
 
 import "../libraries/FixedPoint.sol";
 import "../libraries/PlearnOracleLibrary.sol";
@@ -15,7 +15,7 @@ contract ExampleOracleSimple {
 
     uint256 public constant PERIOD = 24 hours;
 
-    IPancakePair immutable pair;
+    IPlearnPair immutable pair;
     address public immutable token0;
     address public immutable token1;
 
@@ -30,7 +30,7 @@ contract ExampleOracleSimple {
         address tokenA,
         address tokenB
     ) {
-        IPancakePair _pair = IPancakePair(
+        IPlearnPair _pair = IPlearnPair(
             PlearnLibrary.pairFor(factory, tokenA, tokenB)
         );
         pair = _pair;

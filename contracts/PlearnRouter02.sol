@@ -1,20 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.8.0;
 
-import "@pancake/core/contracts/interfaces/IPancakeFactory.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@plearn/core/contracts/interfaces/IPlearnFactory.sol";
+import "@plearn/core/contracts/interfaces/IPlearnPair.sol";
 
 import "./interfaces/IPlearnRouter02.sol";
-import "./interfaces/IERC20.sol";
+import "./interfaces/ISwapFeeReward.sol";
 import "./interfaces/IWETH.sol";
 import "./libraries/PlearnLibrary.sol";
-import "./libraries/SafeMath.sol";
 import "./libraries/TransferHelper.sol";
 
-contract PlearnRouter02 is IPlearnRouter02 {
+contract PlearnRouter02 is IPlearnRouter02, Ownable {
     using SafeMath for uint256;
 
-    address public immutable override factory;
-    address public immutable override WETH;
+    address public override factory;
+    address public override WETH;
+    address public override swapFeeReward;
 
     modifier ensure(uint256 deadline) {
         require(deadline >= block.timestamp, "PlearnRouter: EXPIRED");
@@ -30,6 +34,10 @@ contract PlearnRouter02 is IPlearnRouter02 {
         assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
     }
 
+    function setSwapFeeReward(address _swapFeeReward) public onlyOwner {
+        swapFeeReward = _swapFeeReward;
+    }
+
     // **** ADD LIQUIDITY ****
     function _addLiquidity(
         address tokenA,
@@ -40,8 +48,8 @@ contract PlearnRouter02 is IPlearnRouter02 {
         uint256 amountBMin
     ) internal virtual returns (uint256 amountA, uint256 amountB) {
         // create the pair if it doesn't exist yet
-        if (IPancakeFactory(factory).getPair(tokenA, tokenB) == address(0)) {
-            IPancakeFactory(factory).createPair(tokenA, tokenB);
+        if (IPlearnFactory(factory).getPair(tokenA, tokenB) == address(0)) {
+            IPlearnFactory(factory).createPair(tokenA, tokenB);
         }
         (uint256 reserveA, uint256 reserveB) = PlearnLibrary.getReserves(
             factory,
@@ -109,7 +117,7 @@ contract PlearnRouter02 is IPlearnRouter02 {
         address pair = PlearnLibrary.pairFor(factory, tokenA, tokenB);
         TransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
         TransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
-        liquidity = IPancakePair(pair).mint(to);
+        liquidity = IPlearnPair(pair).mint(to);
     }
 
     function addLiquidityETH(
@@ -143,7 +151,7 @@ contract PlearnRouter02 is IPlearnRouter02 {
         TransferHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
         IWETH(WETH).deposit{value: amountETH}();
         assert(IWETH(WETH).transfer(pair, amountETH));
-        liquidity = IPancakePair(pair).mint(to);
+        liquidity = IPlearnPair(pair).mint(to);
         // refund dust eth, if any
         if (msg.value > amountETH)
             TransferHelper.safeTransferETH(msg.sender, msg.value - amountETH);
@@ -166,8 +174,8 @@ contract PlearnRouter02 is IPlearnRouter02 {
         returns (uint256 amountA, uint256 amountB)
     {
         address pair = PlearnLibrary.pairFor(factory, tokenA, tokenB);
-        IPancakePair(pair).transferFrom(msg.sender, pair, liquidity); // send liquidity to pair
-        (uint256 amount0, uint256 amount1) = IPancakePair(pair).burn(to);
+        IPlearnPair(pair).transferFrom(msg.sender, pair, liquidity); // send liquidity to pair
+        (uint256 amount0, uint256 amount1) = IPlearnPair(pair).burn(to);
         (address token0, ) = PlearnLibrary.sortTokens(tokenA, tokenB);
         (amountA, amountB) = tokenA == token0
             ? (amount0, amount1)
@@ -219,7 +227,7 @@ contract PlearnRouter02 is IPlearnRouter02 {
     ) external virtual override returns (uint256 amountA, uint256 amountB) {
         address pair = PlearnLibrary.pairFor(factory, tokenA, tokenB);
         uint256 value = approveMax ? type(uint256).max : liquidity;
-        IPancakePair(pair).permit(
+        IPlearnPair(pair).permit(
             msg.sender,
             address(this),
             value,
@@ -258,7 +266,7 @@ contract PlearnRouter02 is IPlearnRouter02 {
     {
         address pair = PlearnLibrary.pairFor(factory, token, WETH);
         uint256 value = approveMax ? type(uint256).max : liquidity;
-        IPancakePair(pair).permit(
+        IPlearnPair(pair).permit(
             msg.sender,
             address(this),
             value,
@@ -318,7 +326,7 @@ contract PlearnRouter02 is IPlearnRouter02 {
     ) external virtual override returns (uint256 amountETH) {
         address pair = PlearnLibrary.pairFor(factory, token, WETH);
         uint256 value = approveMax ? type(uint256).max : liquidity;
-        IPancakePair(pair).permit(
+        IPlearnPair(pair).permit(
             msg.sender,
             address(this),
             value,
@@ -351,10 +359,18 @@ contract PlearnRouter02 is IPlearnRouter02 {
             (uint256 amount0Out, uint256 amount1Out) = input == token0
                 ? (uint256(0), amountOut)
                 : (amountOut, uint256(0));
+            if (swapFeeReward != address(0)) {
+                ISwapFeeReward(swapFeeReward).swap(
+                    msg.sender,
+                    input,
+                    output,
+                    amountOut
+                );
+            }
             address to = i < path.length - 2
                 ? PlearnLibrary.pairFor(factory, output, path[i + 2])
                 : _to;
-            IPancakePair(PlearnLibrary.pairFor(factory, input, output)).swap(
+            IPlearnPair(PlearnLibrary.pairFor(factory, input, output)).swap(
                 amount0Out,
                 amount1Out,
                 to,
@@ -547,7 +563,7 @@ contract PlearnRouter02 is IPlearnRouter02 {
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
             (address token0, ) = PlearnLibrary.sortTokens(input, output);
-            IPancakePair pair = IPancakePair(
+            IPlearnPair pair = IPlearnPair(
                 PlearnLibrary.pairFor(factory, input, output)
             );
             uint256 amountInput;
@@ -558,13 +574,22 @@ contract PlearnRouter02 is IPlearnRouter02 {
                 (uint256 reserveInput, uint256 reserveOutput) = input == token0
                     ? (reserve0, reserve1)
                     : (reserve1, reserve0);
-                amountInput = IERC20(input).balanceOf(address(pair)).sub(
-                    reserveInput
-                );
+                amountInput = IERC20(input)
+                    .balanceOf(address(pair))
+                    .sub(reserveInput);
                 amountOutput = PlearnLibrary.getAmountOut(
                     amountInput,
                     reserveInput,
-                    reserveOutput
+                    reserveOutput,
+                    pair.swapFee()
+                );
+            }
+            if (swapFeeReward != address(0)) {
+                ISwapFeeReward(swapFeeReward).swap(
+                    msg.sender,
+                    input,
+                    output,
+                    amountOutput
                 );
             }
             (uint256 amount0Out, uint256 amount1Out) = input == token0
@@ -590,11 +615,13 @@ contract PlearnRouter02 is IPlearnRouter02 {
             PlearnLibrary.pairFor(factory, path[0], path[1]),
             amountIn
         );
-        uint256 balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
+        uint256 balanceBefore = IERC20(path[path.length - 1])
+            .balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to);
         require(
-            IERC20(path[path.length - 1]).balanceOf(to).sub(balanceBefore) >=
-                amountOutMin,
+            IERC20(path[path.length - 1]).balanceOf(to).sub(
+                balanceBefore
+            ) >= amountOutMin,
             "PlearnRouter: INSUFFICIENT_OUTPUT_AMOUNT"
         );
     }
@@ -614,11 +641,13 @@ contract PlearnRouter02 is IPlearnRouter02 {
                 amountIn
             )
         );
-        uint256 balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
+        uint256 balanceBefore = IERC20(path[path.length - 1])
+            .balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to);
         require(
-            IERC20(path[path.length - 1]).balanceOf(to).sub(balanceBefore) >=
-                amountOutMin,
+            IERC20(path[path.length - 1]).balanceOf(to).sub(
+                balanceBefore
+            ) >= amountOutMin,
             "PlearnRouter: INSUFFICIENT_OUTPUT_AMOUNT"
         );
     }
@@ -659,17 +688,31 @@ contract PlearnRouter02 is IPlearnRouter02 {
     function getAmountOut(
         uint256 amountIn,
         uint256 reserveIn,
-        uint256 reserveOut
+        uint256 reserveOut,
+        uint256 swapFee
     ) public pure virtual override returns (uint256 amountOut) {
-        return PlearnLibrary.getAmountOut(amountIn, reserveIn, reserveOut);
+        return
+            PlearnLibrary.getAmountOut(
+                amountIn,
+                reserveIn,
+                reserveOut,
+                swapFee
+            );
     }
 
     function getAmountIn(
         uint256 amountOut,
         uint256 reserveIn,
-        uint256 reserveOut
+        uint256 reserveOut,
+        uint256 swapFee
     ) public pure virtual override returns (uint256 amountIn) {
-        return PlearnLibrary.getAmountIn(amountOut, reserveIn, reserveOut);
+        return
+            PlearnLibrary.getAmountIn(
+                amountOut,
+                reserveIn,
+                reserveOut,
+                swapFee
+            );
     }
 
     function getAmountsOut(uint256 amountIn, address[] memory path)

@@ -140,13 +140,15 @@ interface IPlearnRouter01 {
     function getAmountOut(
         uint256 amountIn,
         uint256 reserveIn,
-        uint256 reserveOut
+        uint256 reserveOut,
+        uint256 swapFee
     ) external pure returns (uint256 amountOut);
 
     function getAmountIn(
         uint256 amountOut,
         uint256 reserveIn,
-        uint256 reserveOut
+        uint256 reserveOut,
+        uint256 swapFee
     ) external pure returns (uint256 amountIn);
 
     function getAmountsOut(uint256 amountIn, address[] calldata path)

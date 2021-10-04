@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.8.0;
 
-import "@pancake/core/contracts/interfaces/IPancakePair.sol";
-
-import "./SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@plearn/core/contracts/interfaces/IPlearnPair.sol";
 
 library PlearnLibrary {
     using SafeMath for uint256;
@@ -35,11 +34,19 @@ library PlearnLibrary {
                         hex"ff",
                         factory,
                         keccak256(abi.encodePacked(token0, token1)),
-                        hex"d0d4c4cd0848c93cb4fd1f498d7013ee6bfb25783ea21593d5834f5d250ece66" // init code hash
+                        hex"4cbf3fd8ad5597eff426ad3a7c39cc1a967bbb2db9ad19bff7aeb234a8c6a19e" // init code hash
                     )
                 )
             )
         );
+    }
+
+    function getSwapFee(
+        address factory,
+        address tokenA,
+        address tokenB
+    ) internal view returns (uint256 swapFee) {
+        swapFee = IPlearnPair(pairFor(factory, tokenA, tokenB)).swapFee();
     }
 
     // fetches and sorts the reserves for a pair
@@ -49,8 +56,7 @@ library PlearnLibrary {
         address tokenB
     ) internal view returns (uint256 reserveA, uint256 reserveB) {
         (address token0, ) = sortTokens(tokenA, tokenB);
-        pairFor(factory, tokenA, tokenB);
-        (uint256 reserve0, uint256 reserve1, ) = IPancakePair(
+        (uint256 reserve0, uint256 reserve1, ) = IPlearnPair(
             pairFor(factory, tokenA, tokenB)
         ).getReserves();
         (reserveA, reserveB) = tokenA == token0
@@ -76,14 +82,15 @@ library PlearnLibrary {
     function getAmountOut(
         uint256 amountIn,
         uint256 reserveIn,
-        uint256 reserveOut
+        uint256 reserveOut,
+        uint256 swapFee
     ) internal pure returns (uint256 amountOut) {
         require(amountIn > 0, "PlearnLibrary: INSUFFICIENT_INPUT_AMOUNT");
         require(
             reserveIn > 0 && reserveOut > 0,
             "PlearnLibrary: INSUFFICIENT_LIQUIDITY"
         );
-        uint256 amountInWithFee = amountIn.mul(998);
+        uint256 amountInWithFee = amountIn.mul(uint256(1000).sub(swapFee));
         uint256 numerator = amountInWithFee.mul(reserveOut);
         uint256 denominator = reserveIn.mul(1000).add(amountInWithFee);
         amountOut = numerator / denominator;
@@ -93,7 +100,8 @@ library PlearnLibrary {
     function getAmountIn(
         uint256 amountOut,
         uint256 reserveIn,
-        uint256 reserveOut
+        uint256 reserveOut,
+        uint256 swapFee
     ) internal pure returns (uint256 amountIn) {
         require(amountOut > 0, "PlearnLibrary: INSUFFICIENT_OUTPUT_AMOUNT");
         require(
@@ -101,7 +109,9 @@ library PlearnLibrary {
             "PlearnLibrary: INSUFFICIENT_LIQUIDITY"
         );
         uint256 numerator = reserveIn.mul(amountOut).mul(1000);
-        uint256 denominator = reserveOut.sub(amountOut).mul(998);
+        uint256 denominator = reserveOut.sub(amountOut).mul(
+            uint256(1000).sub(swapFee)
+        );
         amountIn = (numerator / denominator).add(1);
     }
 
@@ -120,7 +130,12 @@ library PlearnLibrary {
                 path[i],
                 path[i + 1]
             );
-            amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut);
+            amounts[i + 1] = getAmountOut(
+                amounts[i],
+                reserveIn,
+                reserveOut,
+                getSwapFee(factory, path[i], path[i + 1])
+            );
         }
     }
 
@@ -139,7 +154,12 @@ library PlearnLibrary {
                 path[i - 1],
                 path[i]
             );
-            amounts[i - 1] = getAmountIn(amounts[i], reserveIn, reserveOut);
+            amounts[i - 1] = getAmountIn(
+                amounts[i],
+                reserveIn,
+                reserveOut,
+                getSwapFee(factory, path[i - 1], path[i])
+            );
         }
     }
 }

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.8.0;
 
-import "@pancake/core/contracts/interfaces/IPancakeFactory.sol";
-import "@pancake/core/contracts/interfaces/IPancakePair.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@plearn/core/contracts/interfaces/IPlearnFactory.sol";
+import "@plearn/core/contracts/interfaces/IPlearnPair.sol";
 
 import "../libraries/FixedPoint.sol";
-import "../libraries/SafeMath.sol";
 import "../libraries/PlearnLibrary.sol";
 import "../libraries/PlearnOracleLibrary.sol";
 
