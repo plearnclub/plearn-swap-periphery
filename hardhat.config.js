@@ -1,4 +1,5 @@
 require("@nomiclabs/hardhat-waffle");
+require('@nomiclabs/hardhat-ethers');
 require("@nomiclabs/hardhat-etherscan");
 
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -16,12 +17,24 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  */
 module.exports = {
   solidity: {
-    version: "0.6.6",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200,
+    compilers: [{
+        version: "0.8.4",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1000,
+          },
+        },
       },
-    },
-  },
+      {
+        version: "0.6.6",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+    ]
+  }
 };

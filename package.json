@@ -1,49 +1,40 @@
 {
-  "name": "pancakeswap-peripheral",
-  "version": "1.1.0-beta.0",
-  "description": "🎚 Peripheral smart contracts for interacting with pancake",
+  "name": "plearn-swap-periphery",
+  "version": "1.0.0",
+  "description": "Peripheral smart contracts for interacting with Plean",
   "engines": {
     "node": ">=10"
   },
-  "homepage": "https://pancakeswap.finance",
+  "homepage": "https://github.com/plearnclub",
   "repository": {
     "type": "git",
-    "url": "https://github.com/pancakeswap/pancake-swap-periphery.git"
+    "url": "https://github.com/plearnclub/plearn-swap-periphery"
   },
   "files": [
     "build",
     "contracts"
   ],
+  "scripts": {
+    "clean": "rimraf ./build/",
+    "copy-v1-artifacts": "ncp ./buildV1 ./build",
+    "precompile": "yarn clean",
+    "compile": "waffle .waffle.json",
+    "pretest": "yarn compile"
+  },
   "dependencies": {
-    "@uniswap/lib": "1.1.1",
-    "@uniswap/v2-core": "^1.0.1"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-etherscan": "^2.1.6",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
-    "@uniswap/v2-core": "file:../pancake-swap-core",
+    "@pancake/core": "file:../pancake-swap-core",
+    "@plearn/core": "file:../plearn-swap-core",
     "chai": "^4.3.4",
     "ethereum-waffle": "^3.4.0",
     "ethereumjs-util": "^7.1.2",
     "ethers": "^5.4.7",
     "hardhat": "^2.6.4",
-    "mocha": "^6.2.2",
-    "prettier": "^1.19.1",
-    "rimraf": "^3.0.2",
     "solc": "0.8.8"
-  },
-  "scripts": {
-    "lint": "yarn prettier ./test/*.ts --check",
-    "lint:fix": "yarn prettier ./test/*.ts --write",
-    "clean": "rimraf ./build/",
-    "copy-v1-artifacts": "ncp ./buildV1 ./build",
-    "precompile": "yarn clean",
-    "compile": "waffle .waffle.json",
-    "postcompile": "yarn copy-v1-artifacts",
-    "pretest": "yarn compile",
-    "test": "mocha",
-    "prepublishOnly": "yarn test"
   },
   "license": "GPL-3.0-or-later"
 }
