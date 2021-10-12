@@ -28,13 +28,15 @@ library PlearnLibrary {
     ) internal pure returns (address pair) {
         (address token0, address token1) = sortTokens(tokenA, tokenB);
         pair = address(
-            bytes20(
-                keccak256(
-                    abi.encodePacked(
-                        hex"ff",
-                        factory,
-                        keccak256(abi.encodePacked(token0, token1)),
-                        hex"e71a44db09287e8a6489d233a39d63469a5546c8220acf93128eb43cef7a8481" // init code hash
+            uint160(
+                uint256(
+                    keccak256(
+                        abi.encodePacked(
+                            hex"ff",
+                            factory,
+                            keccak256(abi.encodePacked(token0, token1)),
+                            hex"e71a44db09287e8a6489d233a39d63469a5546c8220acf93128eb43cef7a8481" // init code hash
+                        )
                     )
                 )
             )
