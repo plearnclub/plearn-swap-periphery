@@ -1,12 +1,11 @@
 import chai, { expect } from 'chai'
-import { Contract } from 'ethers'
-import { BigNumber, bigNumberify } from 'ethers/utils'
+import { Contract, BigNumber } from 'ethers'
 import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals, mineBlock, encodePrice } from './shared/utilities'
 import { v2Fixture } from './shared/fixtures'
 
-import ExampleSlidingWindowOracle from '../build/ExampleSlidingWindowOracle.json'
+import ExampleSlidingWindowOracle from '../artifacts/contracts/examples/ExampleSlidingWindowOracle.sol/ExampleSlidingWindowOracle.json'
 
 chai.use(solidity)
 
@@ -18,13 +17,16 @@ const defaultToken0Amount = expandTo18Decimals(5)
 const defaultToken1Amount = expandTo18Decimals(10)
 
 describe('ExampleSlidingWindowOracle', () => {
-  const provider = new MockProvider({
-    hardfork: 'istanbul',
-    mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-    gasLimit: 9999999
-  })
+  const provider = new MockProvider(
+    {
+      ganacheOptions: {
+        hardfork: 'istanbul',
+        mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
+        gasLimit: 9999999
+      }
+    })
   const [wallet] = provider.getWallets()
-  const loadFixture = createFixtureLoader(provider, [wallet])
+  const loadFixture = createFixtureLoader([wallet], provider)
 
   let token0: Contract
   let token1: Contract
@@ -55,7 +57,7 @@ describe('ExampleSlidingWindowOracle', () => {
     return deployContract(wallet, ExampleSlidingWindowOracle, [factory.address, windowSize, granularity], overrides)
   }
 
-  beforeEach('deploy fixture', async function() {
+  beforeEach('deploy fixture', async function () {
     const fixture = await loadFixture(v2Fixture)
 
     token0 = fixture.token0
@@ -140,7 +142,7 @@ describe('ExampleSlidingWindowOracle', () => {
       expect(blockTimestamp).to.eq(startTime)
       await slidingWindowOracle.update(token0.address, token1.address, overrides)
       expect(await slidingWindowOracle.pairObservations(pair.address, observationIndexOf(blockTimestamp))).to.deep.eq([
-        bigNumberify(blockTimestamp),
+        BigNumber.from(blockTimestamp),
         await pair.price0CumulativeLast(),
         await pair.price1CumulativeLast()
       ])
@@ -222,7 +224,7 @@ describe('ExampleSlidingWindowOracle', () => {
       it('has cumulative price in previous bucket', async () => {
         expect(
           await slidingWindowOracle.pairObservations(pair.address, observationIndexOf(previousBlockTimestamp))
-        ).to.deep.eq([bigNumberify(previousBlockTimestamp), previousCumulativePrices[0], previousCumulativePrices[1]])
+        ).to.deep.eq([BigNumber.from(previousBlockTimestamp), previousCumulativePrices[0], previousCumulativePrices[1]])
       }).retries(5) // test flaky because timestamps aren't mocked
 
       it('has cumulative price in current bucket', async () => {
@@ -230,7 +232,7 @@ describe('ExampleSlidingWindowOracle', () => {
         const prices = encodePrice(defaultToken0Amount, defaultToken1Amount)
         expect(
           await slidingWindowOracle.pairObservations(pair.address, observationIndexOf(blockTimestamp))
-        ).to.deep.eq([bigNumberify(blockTimestamp), prices[0].mul(timeElapsed), prices[1].mul(timeElapsed)])
+        ).to.deep.eq([BigNumber.from(blockTimestamp), prices[0].mul(timeElapsed), prices[1].mul(timeElapsed)])
       }).retries(5) // test flaky because timestamps aren't mocked
 
       it('provides the current ratio in consult token0', async () => {
@@ -249,7 +251,7 @@ describe('ExampleSlidingWindowOracle', () => {
         await slidingWindowOracle.update(token0.address, token1.address, overrides) // hour 0, 1:2
         // change the price at hour 3 to 1:1 and immediately update
         await mineBlock(provider, startTime + 3 * hour)
-        await addLiquidity(defaultToken0Amount, bigNumberify(0))
+        await addLiquidity(defaultToken0Amount, BigNumber.from(0))
         await slidingWindowOracle.update(token0.address, token1.address, overrides)
 
         // change the ratios at hour 6:00 to 2:1, don't update right away

@@ -1,13 +1,14 @@
 import chai, { expect } from 'chai'
-import { Contract } from 'ethers'
-import { MaxUint256 } from 'ethers/constants'
-import { BigNumber, bigNumberify, defaultAbiCoder, formatEther } from 'ethers/utils'
+import { Contract, BigNumber } from 'ethers'
+import { MaxUint256 } from '@ethersproject/constants'
+import { formatEther } from '@ethersproject/units'
+import { defaultAbiCoder } from '@ethersproject/abi'
 import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals } from './shared/utilities'
 import { v2Fixture } from './shared/fixtures'
 
-import ExampleSwapToPrice from '../build/ExampleSwapToPrice.json'
+import ExampleSwapToPrice from '../artifacts/contracts/examples/ExampleSwapToPrice.sol/ExampleSwapToPrice.json'
 
 chai.use(solidity)
 
@@ -16,20 +17,23 @@ const overrides = {
 }
 
 describe('ExampleSwapToPrice', () => {
-  const provider = new MockProvider({
-    hardfork: 'istanbul',
-    mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-    gasLimit: 9999999
-  })
+  const provider = new MockProvider(
+    {
+      ganacheOptions: {
+        hardfork: 'istanbul',
+        mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
+        gasLimit: 9999999
+      }
+    })
   const [wallet] = provider.getWallets()
-  const loadFixture = createFixtureLoader(provider, [wallet])
+  const loadFixture = createFixtureLoader([wallet], provider)
 
   let token0: Contract
   let token1: Contract
   let pair: Contract
   let swapToPriceExample: Contract
   let router: Contract
-  beforeEach(async function() {
+  beforeEach(async function () {
     const fixture = await loadFixture(v2Fixture)
     token0 = fixture.token0
     token1 = fixture.token1

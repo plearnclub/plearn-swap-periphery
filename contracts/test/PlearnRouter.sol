@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@plearn/core/contracts/interfaces/IPlearnFactory.sol";
 import "@plearn/core/contracts/interfaces/IPlearnPair.sol";
 
-import "../../contracts/interfaces/IPlearnRouter02.sol";
-import "../../contracts/interfaces/ISwapFeeReward.sol";
-import "../../contracts/interfaces/IWETH.sol";
-import "../../contracts/libraries/PlearnLibrary.sol";
-import "../../contracts/libraries/TransferHelper.sol";
+import "../interfaces/IPlearnRouter02.sol";
+import "../interfaces/ISwapFeeReward.sol";
+import "../interfaces/IWETH.sol";
+import "../libraries/PlearnLibrary.sol";
+import "../libraries/TransferHelper.sol";
 
-contract PlearnRouter02V2 is IPlearnRouter02, OwnableUpgradeable {
+contract PlearnRouter is IPlearnRouter02, Ownable {
     using SafeMath for uint256;
 
     address public override factory;
@@ -25,13 +25,7 @@ contract PlearnRouter02V2 is IPlearnRouter02, OwnableUpgradeable {
         _;
     }
 
-    // constructor(address _factory, address _WETH) {
-    //     factory = _factory;
-    //     WETH = _WETH;
-    // }
-
-    function initialize(address _factory, address _WETH) public initializer {
-        __Ownable_init();
+    constructor(address _factory, address _WETH) {
         factory = _factory;
         WETH = _WETH;
     }

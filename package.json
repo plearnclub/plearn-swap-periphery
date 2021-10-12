@@ -15,11 +15,12 @@
     "contracts"
   ],
   "scripts": {
-    "clean": "rimraf ./build/",
-    "copy-v1-artifacts": "ncp ./buildV1 ./build",
-    "precompile": "yarn clean",
-    "compile": "waffle .waffle.json",
-    "pretest": "yarn compile"
+    "build": "hardhat compile",
+    "test": "mocha",
+    "deploy:local": "hardhat run --network localhost scripts/deploy.js",
+    "deploy:testnet": "hardhat run --network testnet scripts/deploy.js",
+    "verify:testnet": "hardhat verify --network testnet contractAddress",
+    "verify:testnet:args": "hardhat verify --network testnet --constructor-args arguments.js contractAddress"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.3.2",
@@ -31,12 +32,18 @@
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@openzeppelin/hardhat-upgrades": "^1.10.0",
     "@plearn/core": "file:../plearn-swap-core",
+    "@types/chai": "^4.2.22",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^16.10.3",
     "chai": "^4.3.4",
     "ethereum-waffle": "^3.4.0",
     "ethereumjs-util": "^7.1.2",
     "ethers": "^5.4.7",
     "hardhat": "^2.6.4",
-    "solc": "0.8.8"
+    "mocha": "^9.1.2",
+    "solc": "0.8.8",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.4.3"
   },
   "license": "GPL-3.0-or-later"
 }

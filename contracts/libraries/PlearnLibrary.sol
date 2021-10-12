@@ -34,7 +34,7 @@ library PlearnLibrary {
                         hex"ff",
                         factory,
                         keccak256(abi.encodePacked(token0, token1)),
-                        hex"4cbf3fd8ad5597eff426ad3a7c39cc1a967bbb2db9ad19bff7aeb234a8c6a19e" // init code hash
+                        hex"e71a44db09287e8a6489d233a39d63469a5546c8220acf93128eb43cef7a8481" // init code hash
                     )
                 )
             )
