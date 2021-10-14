@@ -4,9 +4,8 @@ pragma solidity >=0.8.0;
 import "./IPlearnRouter01.sol";
 
 interface IPlearnRouter02 is IPlearnRouter01 {
+    function swapFeeReward() external view returns (address);
 
-     function swapFeeReward() external view returns (address);
-     
     function removeLiquidityETHSupportingFeeOnTransferTokens(
         address token,
         uint256 liquidity,

@@ -16,7 +16,7 @@
       "constant": false,
       "payable": false,
       "type": "function",
-      "gas": 0
+      "gas": 35725
     },
     {
       "name": "createExchange",
@@ -25,7 +25,7 @@
       "constant": false,
       "payable": false,
       "type": "function",
-      "gas": 0
+      "gas": 187911
     },
     {
       "name": "getExchange",
@@ -34,7 +34,7 @@
       "constant": true,
       "payable": false,
       "type": "function",
-      "gas": 0
+      "gas": 715
     },
     {
       "name": "getToken",
@@ -43,7 +43,7 @@
       "constant": true,
       "payable": false,
       "type": "function",
-      "gas": 0
+      "gas": 745
     },
     {
       "name": "getTokenWithId",
@@ -52,7 +52,7 @@
       "constant": true,
       "payable": false,
       "type": "function",
-      "gas": 0
+      "gas": 736
     },
     {
       "name": "exchangeTemplate",
@@ -61,7 +61,7 @@
       "constant": true,
       "payable": false,
       "type": "function",
-      "gas": 0
+      "gas": 633
     },
     {
       "name": "tokenCount",
@@ -70,7 +70,7 @@
       "constant": true,
       "payable": false,
       "type": "function",
-      "gas": 0
+      "gas": 663
     }
   ],
   "evm": {

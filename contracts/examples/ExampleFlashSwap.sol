@@ -43,9 +43,7 @@ contract ExampleFlashSwap is IPlearnCallee {
             // scope for token{0,1}, avoids stack too deep errors
             address token0 = IPlearnPair(msg.sender).token0();
             address token1 = IPlearnPair(msg.sender).token1();
-            assert(
-                msg.sender == PlearnLibrary.pairFor(factory, token0, token1)
-            ); // ensure that msg.sender is actually a V2 pair
+            assert(msg.sender == PlearnLibrary.pairFor(factory, token0, token1)); // ensure that msg.sender is actually a V2 pair
             assert(amount0 == 0 || amount1 == 0); // this strategy is unidirectional
             path[0] = amount0 == 0 ? token0 : token1;
             path[1] = amount0 == 0 ? token1 : token0;
@@ -55,41 +53,23 @@ contract ExampleFlashSwap is IPlearnCallee {
 
         assert(path[0] == address(WETH) || path[1] == address(WETH)); // this strategy only works with a V2 WETH pair
         IERC20 token = IERC20(path[0] == address(WETH) ? path[1] : path[0]);
-        IPlearnV1Exchange exchangeV1 = IPlearnV1Exchange(
-            factoryV1.getExchange(address(token))
-        ); // get V1 exchange
+        IPlearnV1Exchange exchangeV1 = IPlearnV1Exchange(factoryV1.getExchange(address(token))); // get V1 exchange
 
         if (amountToken > 0) {
             uint256 minETH = abi.decode(data, (uint256)); // slippage parameter for V1, passed in by caller
             token.approve(address(exchangeV1), amountToken);
-            uint256 amountReceived = exchangeV1.tokenToEthSwapInput(
-                amountToken,
-                minETH,
-                type(uint256).max
-            );
-            uint256 amountRequired = PlearnLibrary.getAmountsIn(
-                factory,
-                amountToken,
-                path
-            )[0];
+            uint256 amountReceived = exchangeV1.tokenToEthSwapInput(amountToken, minETH, type(uint256).max);
+            uint256 amountRequired = PlearnLibrary.getAmountsIn(factory, amountToken, path)[0];
             assert(amountReceived > amountRequired); // fail if we didn't get enough ETH back to repay our flash loan
-            WETH.deposit{value: amountRequired}();
+            WETH.deposit{ value: amountRequired }();
             assert(WETH.transfer(msg.sender, amountRequired)); // return WETH to V2 pair
-            (bool success, ) = sender.call{
-                value: amountReceived - amountRequired
-            }(new bytes(0)); // keep the rest! (ETH)
+            (bool success, ) = sender.call{ value: amountReceived - amountRequired }(new bytes(0)); // keep the rest! (ETH)
             assert(success);
         } else {
             uint256 minTokens = abi.decode(data, (uint256)); // slippage parameter for V1, passed in by caller
             WETH.withdraw(amountETH);
-            uint256 amountReceived = exchangeV1.ethToTokenSwapInput{
-                value: amountETH
-            }(minTokens, type(uint256).max);
-            uint256 amountRequired = PlearnLibrary.getAmountsIn(
-                factory,
-                amountETH,
-                path
-            )[0];
+            uint256 amountReceived = exchangeV1.ethToTokenSwapInput{ value: amountETH }(minTokens, type(uint256).max);
+            uint256 amountRequired = PlearnLibrary.getAmountsIn(factory, amountETH, path)[0];
             assert(amountReceived > amountRequired); // fail if we didn't get enough tokens back to repay our flash loan
             assert(token.transfer(msg.sender, amountRequired)); // return tokens to V2 pair
             assert(token.transfer(sender, amountReceived - amountRequired)); // keep the rest! (tokens)

@@ -1,8 +1,6 @@
 import chai, { expect } from 'chai'
-import { Contract, BigNumber } from 'ethers'
+import { Contract } from 'ethers'
 import { MaxUint256 } from '@ethersproject/constants'
-import { formatEther } from '@ethersproject/units'
-import { defaultAbiCoder } from '@ethersproject/abi'
 import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals } from './shared/utilities'
@@ -122,7 +120,7 @@ describe('ExampleSwapToPrice', () => {
           overrides
         )
       )
-        // (1e19 + 526682316179835569) : (1e21 - 49890467170695440744) ~= 1:90
+        // (1e19 + 526682316179835569) : (1e21 - 49938008832260615913) ~= 1:90
         .to.emit(token0, 'Transfer')
         .withArgs(wallet.address, swapToPriceExample.address, '526682316179835569')
         .to.emit(token0, 'Approval')
@@ -130,7 +128,7 @@ describe('ExampleSwapToPrice', () => {
         .to.emit(token0, 'Transfer')
         .withArgs(swapToPriceExample.address, pair.address, '526682316179835569')
         .to.emit(token1, 'Transfer')
-        .withArgs(pair.address, wallet.address, '49890467170695440744')
+        .withArgs(pair.address, wallet.address, '49938008832260615913')
     })
 
     it('moves the price to 1:110', async () => {
@@ -147,7 +145,7 @@ describe('ExampleSwapToPrice', () => {
           overrides
         )
       )
-        // (1e21 + 47376582963642643588) : (1e19 - 451039908682851138) ~= 1:110
+        // (1e21 + 47376582963642643588) : (1e19 - 451471881325850378) ~= 1:110
         .to.emit(token1, 'Transfer')
         .withArgs(wallet.address, swapToPriceExample.address, '47376582963642643588')
         .to.emit(token1, 'Approval')
@@ -155,7 +153,7 @@ describe('ExampleSwapToPrice', () => {
         .to.emit(token1, 'Transfer')
         .withArgs(swapToPriceExample.address, pair.address, '47376582963642643588')
         .to.emit(token0, 'Transfer')
-        .withArgs(pair.address, wallet.address, '451039908682851138')
+        .withArgs(pair.address, wallet.address, '451471881325850378')
     })
 
     it('reverse token order', async () => {
@@ -172,7 +170,7 @@ describe('ExampleSwapToPrice', () => {
           overrides
         )
       )
-        // (1e21 + 47376582963642643588) : (1e19 - 451039908682851138) ~= 1:110
+        // (1e21 + 47376582963642643588) : (1e19 - 451471881325850378) ~= 1:110
         .to.emit(token1, 'Transfer')
         .withArgs(wallet.address, swapToPriceExample.address, '47376582963642643588')
         .to.emit(token1, 'Approval')
@@ -180,7 +178,7 @@ describe('ExampleSwapToPrice', () => {
         .to.emit(token1, 'Transfer')
         .withArgs(swapToPriceExample.address, pair.address, '47376582963642643588')
         .to.emit(token0, 'Transfer')
-        .withArgs(pair.address, wallet.address, '451039908682851138')
+        .withArgs(pair.address, wallet.address, '451471881325850378')
     })
 
     it('swap gas cost', async () => {
@@ -196,7 +194,7 @@ describe('ExampleSwapToPrice', () => {
         overrides
       )
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq('122329')
+      expect(receipt.gasUsed).to.eq('146751')
     }).retries(2) // gas test is inconsistent
   })
 })

@@ -4,10 +4,6 @@ import { Contract, BigNumber } from 'ethers'
 import { MaxUint256 } from '@ethersproject/constants'
 
 import { v2Fixture } from './shared/fixtures'
-import { expandTo18Decimals, getApprovalDigest, MINIMUM_LIQUIDITY } from './shared/utilities'
-
-import DeflatingERC20 from '../artifacts/contracts/test/DeflatingERC20.sol/DeflatingERC20.json'
-import { ecsign } from 'ethereumjs-util'
 
 chai.use(solidity)
 
@@ -15,7 +11,7 @@ const overrides = {
   gasLimit: 9999999
 }
 
-describe('UniswapV2Router02', () => {
+describe('PlearnRouter02', () => {
   const provider = new MockProvider(
     {
       ganacheOptions: {
@@ -63,7 +59,7 @@ describe('UniswapV2Router02', () => {
     )
 
     await expect(router.getAmountsOut(BigNumber.from(2), [token0.address])).to.be.revertedWith(
-      'UniswapV2Library: INVALID_PATH'
+      'PlearnLibrary: INVALID_PATH'
     )
     const path = [token0.address, token1.address]
     expect(await router.getAmountsOut(BigNumber.from(2), path)).to.deep.eq([BigNumber.from(2), BigNumber.from(1)])

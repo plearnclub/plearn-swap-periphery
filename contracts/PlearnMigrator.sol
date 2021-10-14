@@ -27,33 +27,25 @@ contract PlearnMigrator is IPlearnMigrator {
         address to,
         uint256 deadline
     ) external override {
-        IPlearnV1Exchange exchangeV1 = IPlearnV1Exchange(
-            factoryV1.getExchange(token)
-        );
+        IPlearnV1Exchange exchangeV1 = IPlearnV1Exchange(factoryV1.getExchange(token));
         uint256 liquidityV1 = exchangeV1.balanceOf(msg.sender);
-        require(
-            exchangeV1.transferFrom(msg.sender, address(this), liquidityV1),
-            "TRANSFER_FROM_FAILED"
-        );
-        (uint256 amountETHV1, uint256 amountTokenV1) = exchangeV1
-            .removeLiquidity(liquidityV1, 1, 1, type(uint256).max);
+        require(exchangeV1.transferFrom(msg.sender, address(this), liquidityV1), "TRANSFER_FROM_FAILED");
+        (uint256 amountETHV1, uint256 amountTokenV1) = exchangeV1.removeLiquidity(liquidityV1, 1, 1, type(uint256).max);
         TransferHelper.safeApprove(token, address(router), amountTokenV1);
-        (uint256 amountTokenV2, uint256 amountETHV2, ) = router.addLiquidityETH{
-            value: amountETHV1
-        }(token, amountTokenV1, amountTokenMin, amountETHMin, to, deadline);
+        (uint256 amountTokenV2, uint256 amountETHV2, ) = router.addLiquidityETH{ value: amountETHV1 }(
+            token,
+            amountTokenV1,
+            amountTokenMin,
+            amountETHMin,
+            to,
+            deadline
+        );
         if (amountTokenV1 > amountTokenV2) {
             TransferHelper.safeApprove(token, address(router), 0); // be a good blockchain citizen, reset allowance to 0
-            TransferHelper.safeTransfer(
-                token,
-                msg.sender,
-                amountTokenV1 - amountTokenV2
-            );
+            TransferHelper.safeTransfer(token, msg.sender, amountTokenV1 - amountTokenV2);
         } else if (amountETHV1 > amountETHV2) {
             // addLiquidityETH guarantees that all of amountETHV1 or amountTokenV1 will be used, hence this else is safe
-            TransferHelper.safeTransferETH(
-                msg.sender,
-                amountETHV1 - amountETHV2
-            );
+            TransferHelper.safeTransferETH(msg.sender, amountETHV1 - amountETHV2);
         }
     }
 }

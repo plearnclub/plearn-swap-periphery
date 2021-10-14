@@ -47,8 +47,7 @@ contract ExampleSlidingWindowOracle {
     ) {
         require(granularity_ > 1, "SlidingWindowOracle: GRANULARITY");
         require(
-            (periodSize = windowSize_ / granularity_) * granularity_ ==
-                windowSize_,
+            (periodSize = windowSize_ / granularity_) * granularity_ == windowSize_,
             "SlidingWindowOracle: WINDOW_NOT_EVENLY_DIVISIBLE"
         );
         factory = factory_;
@@ -57,21 +56,13 @@ contract ExampleSlidingWindowOracle {
     }
 
     // returns the index of the observation corresponding to the given timestamp
-    function observationIndexOf(uint256 timestamp)
-        public
-        view
-        returns (uint8 index)
-    {
+    function observationIndexOf(uint256 timestamp) public view returns (uint8 index) {
         uint256 epochPeriod = timestamp / periodSize;
         return uint8(epochPeriod % granularity);
     }
 
     // returns the observation from the oldest epoch (at the beginning of the window) relative to the current time
-    function getFirstObservationInWindow(address pair)
-        private
-        view
-        returns (Observation storage firstObservation)
-    {
+    function getFirstObservationInWindow(address pair) private view returns (Observation storage firstObservation) {
         uint8 observationIndex = observationIndexOf(block.timestamp);
         // no overflow issue. if observationIndex + 1 overflows, result is still zero.
         uint8 firstObservationIndex = (observationIndex + 1) % granularity;
@@ -90,18 +81,12 @@ contract ExampleSlidingWindowOracle {
 
         // get the observation for the current period
         uint8 observationIndex = observationIndexOf(block.timestamp);
-        Observation storage observation = pairObservations[pair][
-            observationIndex
-        ];
+        Observation storage observation = pairObservations[pair][observationIndex];
 
         // we only want to commit updates once per period (i.e. windowSize / granularity)
         uint256 timeElapsed = block.timestamp - observation.timestamp;
         if (timeElapsed > periodSize) {
-            (
-                uint256 price0Cumulative,
-                uint256 price1Cumulative,
-
-            ) = PlearnOracleLibrary.currentCumulativePrices(pair);
+            (uint256 price0Cumulative, uint256 price1Cumulative, ) = PlearnOracleLibrary.currentCumulativePrices(pair);
             observation.timestamp = block.timestamp;
             observation.price0Cumulative = price0Cumulative;
             observation.price1Cumulative = price1Cumulative;
@@ -132,44 +117,20 @@ contract ExampleSlidingWindowOracle {
         address tokenOut
     ) external view returns (uint256 amountOut) {
         address pair = PlearnLibrary.pairFor(factory, tokenIn, tokenOut);
-        Observation storage firstObservation = getFirstObservationInWindow(
-            pair
-        );
+        Observation storage firstObservation = getFirstObservationInWindow(pair);
 
         uint256 timeElapsed = block.timestamp - firstObservation.timestamp;
-        require(
-            timeElapsed <= windowSize,
-            "SlidingWindowOracle: MISSING_HISTORICAL_OBSERVATION"
-        );
+        require(timeElapsed <= windowSize, "SlidingWindowOracle: MISSING_HISTORICAL_OBSERVATION");
         // should never happen.
-        require(
-            timeElapsed >= windowSize - periodSize * 2,
-            "SlidingWindowOracle: UNEXPECTED_TIME_ELAPSED"
-        );
+        require(timeElapsed >= windowSize - periodSize * 2, "SlidingWindowOracle: UNEXPECTED_TIME_ELAPSED");
 
-        (
-            uint256 price0Cumulative,
-            uint256 price1Cumulative,
-
-        ) = PlearnOracleLibrary.currentCumulativePrices(pair);
+        (uint256 price0Cumulative, uint256 price1Cumulative, ) = PlearnOracleLibrary.currentCumulativePrices(pair);
         (address token0, ) = PlearnLibrary.sortTokens(tokenIn, tokenOut);
 
         if (token0 == tokenIn) {
-            return
-                computeAmountOut(
-                    firstObservation.price0Cumulative,
-                    price0Cumulative,
-                    timeElapsed,
-                    amountIn
-                );
+            return computeAmountOut(firstObservation.price0Cumulative, price0Cumulative, timeElapsed, amountIn);
         } else {
-            return
-                computeAmountOut(
-                    firstObservation.price1Cumulative,
-                    price1Cumulative,
-                    timeElapsed,
-                    amountIn
-                );
+            return computeAmountOut(firstObservation.price1Cumulative, price1Cumulative, timeElapsed, amountIn);
         }
     }
 }

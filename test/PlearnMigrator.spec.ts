@@ -12,7 +12,7 @@ const overrides = {
   gasLimit: 9999999
 }
 
-describe('UniswapV2Migrator', () => {
+describe('PlearnMigrator', () => {
   const provider = new MockProvider(
     {
       ganacheOptions: {

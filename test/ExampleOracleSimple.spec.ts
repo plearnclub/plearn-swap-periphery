@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai'
-import { Contract, BigNumber } from 'ethers'
+import { Contract } from 'ethers'
 import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals, mineBlock, encodePrice } from './shared/utilities'

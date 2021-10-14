@@ -36,8 +36,7 @@ contract ExampleSwapToPrice {
             invariant.mul(aToB ? truePriceTokenA : truePriceTokenB).mul(1000) /
                 uint256(aToB ? truePriceTokenB : truePriceTokenA).mul(997)
         );
-        uint256 rightSide = (aToB ? reserveA.mul(1000) : reserveB.mul(1000)) /
-            997;
+        uint256 rightSide = (aToB ? reserveA.mul(1000) : reserveB.mul(1000)) / 997;
 
         // compute the amount that must be sent to move the price to the profit-maximizing price
         amountIn = leftSide.sub(rightSide);
@@ -57,30 +56,15 @@ contract ExampleSwapToPrice {
         uint256 deadline
     ) public {
         // true price is expressed as a ratio, so both values must be non-zero
-        require(
-            truePriceTokenA != 0 && truePriceTokenB != 0,
-            "ExampleSwapToPrice: ZERO_PRICE"
-        );
+        require(truePriceTokenA != 0 && truePriceTokenB != 0, "ExampleSwapToPrice: ZERO_PRICE");
         // caller can specify 0 for either if they wish to swap in only one direction, but not both
-        require(
-            maxSpendTokenA != 0 || maxSpendTokenB != 0,
-            "ExampleSwapToPrice: ZERO_SPEND"
-        );
+        require(maxSpendTokenA != 0 || maxSpendTokenB != 0, "ExampleSwapToPrice: ZERO_SPEND");
 
         bool aToB;
         uint256 amountIn;
         {
-            (uint256 reserveA, uint256 reserveB) = PlearnLibrary.getReserves(
-                factory,
-                tokenA,
-                tokenB
-            );
-            (aToB, amountIn) = computeProfitMaximizingTrade(
-                truePriceTokenA,
-                truePriceTokenB,
-                reserveA,
-                reserveB
-            );
+            (uint256 reserveA, uint256 reserveB) = PlearnLibrary.getReserves(factory, tokenA, tokenB);
+            (aToB, amountIn) = computeProfitMaximizingTrade(truePriceTokenA, truePriceTokenB, reserveA, reserveB);
         }
 
         // spend up to the allowance of the token in
@@ -91,12 +75,7 @@ contract ExampleSwapToPrice {
 
         address tokenIn = aToB ? tokenA : tokenB;
         address tokenOut = aToB ? tokenB : tokenA;
-        TransferHelper.safeTransferFrom(
-            tokenIn,
-            msg.sender,
-            address(this),
-            amountIn
-        );
+        TransferHelper.safeTransferFrom(tokenIn, msg.sender, address(this), amountIn);
         TransferHelper.safeApprove(tokenIn, address(router), amountIn);
 
         address[] memory path = new address[](2);
