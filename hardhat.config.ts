@@ -23,7 +23,6 @@ export default {
       url: "http://127.0.0.1:8545",
     },
     hardhat: {
-      accounts: { mnemonic: mnemonic },
     },
     testnet: {
       url: "https://data-seed-prebsc-2-s3.binance.org:8545",

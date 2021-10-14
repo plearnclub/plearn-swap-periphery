@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@plearn/core/contracts/interfaces/IPlearnCallee.sol";
+import "@plearn-libs/plearn-swap-core/contracts/interfaces/IPlearnCallee.sol";
 
 import "../libraries/PlearnLibrary.sol";
 import "../interfaces/V1/IPlearnV1Factory.sol";

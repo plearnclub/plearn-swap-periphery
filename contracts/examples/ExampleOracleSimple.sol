@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.8.0;
 
-import "@plearn/core/contracts/interfaces/IPlearnFactory.sol";
-import "@plearn/core/contracts/interfaces/IPlearnPair.sol";
+import "@plearn-libs/plearn-swap-core/contracts/interfaces/IPlearnFactory.sol";
+import "@plearn-libs/plearn-swap-core/contracts/interfaces/IPlearnPair.sol";
 
 import "../libraries/FixedPoint.sol";
 import "../libraries/PlearnOracleLibrary.sol";

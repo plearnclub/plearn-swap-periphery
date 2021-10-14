@@ -2,8 +2,8 @@
 pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@plearn/core/contracts/interfaces/IPlearnFactory.sol";
-import "@plearn/core/contracts/interfaces/IPlearnPair.sol";
+import "@plearn-libs/plearn-swap-core/contracts/interfaces/IPlearnFactory.sol";
+import "@plearn-libs/plearn-swap-core/contracts/interfaces/IPlearnPair.sol";
 
 import "../libraries/FixedPoint.sol";
 import "../libraries/PlearnLibrary.sol";

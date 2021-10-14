@@ -4,8 +4,8 @@ pragma solidity >=0.8.0;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@plearn/core/contracts/interfaces/IPlearnFactory.sol";
-import "@plearn/core/contracts/interfaces/IPlearnPair.sol";
+import "@plearn-libs/plearn-swap-core/contracts/interfaces/IPlearnFactory.sol";
+import "@plearn-libs/plearn-swap-core/contracts/interfaces/IPlearnPair.sol";
 
 import "../../contracts/interfaces/IPlearnRouter02.sol";
 import "../../contracts/interfaces/ISwapFeeReward.sol";

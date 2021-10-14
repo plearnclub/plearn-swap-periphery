@@ -2,8 +2,8 @@
 pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@plearn/core/contracts/interfaces/IPlearnFactory.sol";
-import "@plearn/core/contracts/interfaces/IPlearnPair.sol";
+import "@plearn-libs/plearn-swap-core/contracts/interfaces/IPlearnFactory.sol";
+import "@plearn-libs/plearn-swap-core/contracts/interfaces/IPlearnPair.sol";
 
 import "./interfaces/IPlearnRouter01.sol";
 import "./interfaces/IWETH.sol";

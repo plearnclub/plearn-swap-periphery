@@ -49,7 +49,7 @@ describe('ExampleFlashSwap', () => {
     )
   })
 
-  it('PLearnswapV2Call:0', async () => {
+  it('PLearnswapCall:0', async () => {
     // add liquidity to V1 at a rate of 1 ETH / 200 X
     const WETHPartnerAmountV1 = expandTo18Decimals(2000)
     const ETHAmountV1 = expandTo18Decimals(10)
@@ -102,7 +102,7 @@ describe('ExampleFlashSwap', () => {
     expect(priceV2.toString()).to.eq('123') // we pushed the v2 price up to ~123
   })
 
-  it('PlearnswapV2Call:1', async () => {
+  it('PlearnswapCall:1', async () => {
     // add liquidity to V1 at a rate of 1 ETH / 100 X
     const WETHPartnerAmountV1 = expandTo18Decimals(1000)
     const ETHAmountV1 = expandTo18Decimals(10)

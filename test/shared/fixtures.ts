@@ -4,8 +4,8 @@ import { deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals } from './utilities'
 
-import Factory from '@plearn/core/artifacts/contracts/test/Factory.sol/Factory.json'
-import IPlearnPair from '@plearn/core/artifacts/contracts/interfaces/IPlearnPair.sol/IPlearnPair.json'
+import Factory from '@plearn-libs/plearn-swap-core/artifacts/contracts/test/Factory.sol/Factory.json'
+import IPlearnPair from '@plearn-libs/plearn-swap-core/artifacts/contracts/interfaces/IPlearnPair.sol/IPlearnPair.json'
 
 import ERC20 from '../../artifacts/contracts/test/ERC20.sol/ERC20.json'
 import WETH9 from '../../artifacts/contracts/test/WETH9.sol/WETH9.json'
