@@ -8,7 +8,6 @@ import "@plearn-libs/plearn-swap-core/contracts/interfaces/IPlearnFactory.sol";
 import "@plearn-libs/plearn-swap-core/contracts/interfaces/IPlearnPair.sol";
 
 import "../../contracts/interfaces/IPlearnRouter02.sol";
-import "../../contracts/interfaces/ISwapFeeReward.sol";
 import "../../contracts/interfaces/IWETH.sol";
 import "../../contracts/libraries/PlearnLibrary.sol";
 import "../../contracts/libraries/TransferHelper.sol";
@@ -18,7 +17,6 @@ contract PlearnRouterUpgradeableV2 is IPlearnRouter02, OwnableUpgradeable {
 
     address public override factory;
     address public override WETH;
-    address public override swapFeeReward;
 
     modifier ensure(uint256 deadline) {
         require(deadline >= block.timestamp, "PlearnRouter: EXPIRED");
@@ -38,10 +36,6 @@ contract PlearnRouterUpgradeableV2 is IPlearnRouter02, OwnableUpgradeable {
 
     receive() external payable {
         assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
-    }
-
-    function setSwapFeeReward(address _swapFeeReward) public onlyOwner {
-        swapFeeReward = _swapFeeReward;
     }
 
     // **** ADD LIQUIDITY ****
@@ -269,9 +263,6 @@ contract PlearnRouterUpgradeableV2 is IPlearnRouter02, OwnableUpgradeable {
             (uint256 amount0Out, uint256 amount1Out) = input == token0
                 ? (uint256(0), amountOut)
                 : (amountOut, uint256(0));
-            if (swapFeeReward != address(0)) {
-                ISwapFeeReward(swapFeeReward).swap(msg.sender, input, output, amountOut);
-            }
             address to = i < path.length - 2 ? PlearnLibrary.pairFor(factory, output, path[i + 2]) : _to;
             IPlearnPair(PlearnLibrary.pairFor(factory, input, output)).swap(amount0Out, amount1Out, to, new bytes(0));
         }
@@ -402,9 +393,6 @@ contract PlearnRouterUpgradeableV2 is IPlearnRouter02, OwnableUpgradeable {
                     : (reserve1, reserve0);
                 amountInput = IERC20(input).balanceOf(address(pair)).sub(reserveInput);
                 amountOutput = PlearnLibrary.getAmountOut(amountInput, reserveInput, reserveOutput, pair.swapFee());
-            }
-            if (swapFeeReward != address(0)) {
-                ISwapFeeReward(swapFeeReward).swap(msg.sender, input, output, amountOutput);
             }
             (uint256 amount0Out, uint256 amount1Out) = input == token0
                 ? (uint256(0), amountOutput)

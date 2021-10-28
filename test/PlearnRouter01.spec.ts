@@ -371,7 +371,7 @@ describe('PlearnRouter{01,02}', () => {
           expect(receipt.gasUsed).to.eq(
             {
               [RouterVersion.PlearnRouter01]: 130062,
-              [RouterVersion.PlearnRouter02]: 130916
+              [RouterVersion.PlearnRouter02]: 130075
             }[routerVersion as RouterVersion]
           )
         }).retries(3)
@@ -519,8 +519,8 @@ describe('PlearnRouter{01,02}', () => {
           const receipt = await tx.wait()
           expect(receipt.gasUsed).to.eq(
             {
-              [RouterVersion.PlearnRouter01]: 170435,
-              [RouterVersion.PlearnRouter02]: 170435
+              [RouterVersion.PlearnRouter01]: 169609,
+              [RouterVersion.PlearnRouter02]: 169616
             }[routerVersion as RouterVersion]
           )
         }).retries(3)
