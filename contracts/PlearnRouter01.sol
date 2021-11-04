@@ -24,6 +24,10 @@ contract PlearnRouter01 is IPlearnRouter01 {
         WETH = _WETH;
     }
 
+    receive() external payable {
+        assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
+    }
+
     // **** ADD LIQUIDITY ****
     function _addLiquidity(
         address tokenA,
@@ -37,36 +41,18 @@ contract PlearnRouter01 is IPlearnRouter01 {
         if (IPlearnFactory(factory).getPair(tokenA, tokenB) == address(0)) {
             IPlearnFactory(factory).createPair(tokenA, tokenB);
         }
-        (uint256 reserveA, uint256 reserveB) = PlearnLibrary.getReserves(
-            factory,
-            tokenA,
-            tokenB
-        );
+        (uint256 reserveA, uint256 reserveB) = PlearnLibrary.getReserves(factory, tokenA, tokenB);
         if (reserveA == 0 && reserveB == 0) {
             (amountA, amountB) = (amountADesired, amountBDesired);
         } else {
-            uint256 amountBOptimal = PlearnLibrary.quote(
-                amountADesired,
-                reserveA,
-                reserveB
-            );
+            uint256 amountBOptimal = PlearnLibrary.quote(amountADesired, reserveA, reserveB);
             if (amountBOptimal <= amountBDesired) {
-                require(
-                    amountBOptimal >= amountBMin,
-                    "PlearnRouter: INSUFFICIENT_B_AMOUNT"
-                );
+                require(amountBOptimal >= amountBMin, "PlearnRouter: INSUFFICIENT_B_AMOUNT");
                 (amountA, amountB) = (amountADesired, amountBOptimal);
             } else {
-                uint256 amountAOptimal = PlearnLibrary.quote(
-                    amountBDesired,
-                    reserveB,
-                    reserveA
-                );
+                uint256 amountAOptimal = PlearnLibrary.quote(amountBDesired, reserveB, reserveA);
                 assert(amountAOptimal <= amountADesired);
-                require(
-                    amountAOptimal >= amountAMin,
-                    "PlearnRouter: INSUFFICIENT_A_AMOUNT"
-                );
+                require(amountAOptimal >= amountAMin, "PlearnRouter: INSUFFICIENT_A_AMOUNT");
                 (amountA, amountB) = (amountAOptimal, amountBDesired);
             }
         }
@@ -91,14 +77,7 @@ contract PlearnRouter01 is IPlearnRouter01 {
             uint256 liquidity
         )
     {
-        (amountA, amountB) = _addLiquidity(
-            tokenA,
-            tokenB,
-            amountADesired,
-            amountBDesired,
-            amountAMin,
-            amountBMin
-        );
+        (amountA, amountB) = _addLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin);
         address pair = PlearnLibrary.pairFor(factory, tokenA, tokenB);
         TransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
         TransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
@@ -133,11 +112,10 @@ contract PlearnRouter01 is IPlearnRouter01 {
         );
         address pair = PlearnLibrary.pairFor(factory, token, WETH);
         TransferHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
-        IWETH(WETH).deposit{value: amountETH}();
+        IWETH(WETH).deposit{ value: amountETH }();
         assert(IWETH(WETH).transfer(pair, amountETH));
         liquidity = IPlearnPair(pair).mint(to);
-        if (msg.value > amountETH)
-            TransferHelper.safeTransferETH(msg.sender, msg.value - amountETH); // refund dust eth, if any
+        if (msg.value > amountETH) TransferHelper.safeTransferETH(msg.sender, msg.value - amountETH); // refund dust eth, if any
     }
 
     // **** REMOVE LIQUIDITY ****
@@ -149,19 +127,12 @@ contract PlearnRouter01 is IPlearnRouter01 {
         uint256 amountBMin,
         address to,
         uint256 deadline
-    )
-        public
-        override
-        ensure(deadline)
-        returns (uint256 amountA, uint256 amountB)
-    {
+    ) public override ensure(deadline) returns (uint256 amountA, uint256 amountB) {
         address pair = PlearnLibrary.pairFor(factory, tokenA, tokenB);
         IPlearnPair(pair).transferFrom(msg.sender, pair, liquidity); // send liquidity to pair
         (uint256 amount0, uint256 amount1) = IPlearnPair(pair).burn(to);
         (address token0, ) = PlearnLibrary.sortTokens(tokenA, tokenB);
-        (amountA, amountB) = tokenA == token0
-            ? (amount0, amount1)
-            : (amount1, amount0);
+        (amountA, amountB) = tokenA == token0 ? (amount0, amount1) : (amount1, amount0);
         require(amountA >= amountAMin, "PlearnRouter: INSUFFICIENT_A_AMOUNT");
         require(amountB >= amountBMin, "PlearnRouter: INSUFFICIENT_B_AMOUNT");
     }
@@ -173,12 +144,7 @@ contract PlearnRouter01 is IPlearnRouter01 {
         uint256 amountETHMin,
         address to,
         uint256 deadline
-    )
-        public
-        override
-        ensure(deadline)
-        returns (uint256 amountToken, uint256 amountETH)
-    {
+    ) public override ensure(deadline) returns (uint256 amountToken, uint256 amountETH) {
         (amountToken, amountETH) = removeLiquidity(
             token,
             WETH,
@@ -208,24 +174,8 @@ contract PlearnRouter01 is IPlearnRouter01 {
     ) external override returns (uint256 amountA, uint256 amountB) {
         address pair = PlearnLibrary.pairFor(factory, tokenA, tokenB);
         uint256 value = approveMax ? type(uint256).max : liquidity;
-        IPlearnPair(pair).permit(
-            msg.sender,
-            address(this),
-            value,
-            deadline,
-            v,
-            r,
-            s
-        );
-        (amountA, amountB) = removeLiquidity(
-            tokenA,
-            tokenB,
-            liquidity,
-            amountAMin,
-            amountBMin,
-            to,
-            deadline
-        );
+        IPlearnPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
+        (amountA, amountB) = removeLiquidity(tokenA, tokenB, liquidity, amountAMin, amountBMin, to, deadline);
     }
 
     function removeLiquidityETHWithPermit(
@@ -242,23 +192,8 @@ contract PlearnRouter01 is IPlearnRouter01 {
     ) external override returns (uint256 amountToken, uint256 amountETH) {
         address pair = PlearnLibrary.pairFor(factory, token, WETH);
         uint256 value = approveMax ? type(uint256).max : liquidity;
-        IPlearnPair(pair).permit(
-            msg.sender,
-            address(this),
-            value,
-            deadline,
-            v,
-            r,
-            s
-        );
-        (amountToken, amountETH) = removeLiquidityETH(
-            token,
-            liquidity,
-            amountTokenMin,
-            amountETHMin,
-            to,
-            deadline
-        );
+        IPlearnPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
+        (amountToken, amountETH) = removeLiquidityETH(token, liquidity, amountTokenMin, amountETHMin, to, deadline);
     }
 
     // **** SWAP ****
@@ -275,15 +210,8 @@ contract PlearnRouter01 is IPlearnRouter01 {
             (uint256 amount0Out, uint256 amount1Out) = input == token0
                 ? (uint256(0), amountOut)
                 : (amountOut, uint256(0));
-            address to = i < path.length - 2
-                ? PlearnLibrary.pairFor(factory, output, path[i + 2])
-                : _to;
-            IPlearnPair(PlearnLibrary.pairFor(factory, input, output)).swap(
-                amount0Out,
-                amount1Out,
-                to,
-                new bytes(0)
-            );
+            address to = i < path.length - 2 ? PlearnLibrary.pairFor(factory, output, path[i + 2]) : _to;
+            IPlearnPair(PlearnLibrary.pairFor(factory, input, output)).swap(amount0Out, amount1Out, to, new bytes(0));
         }
     }
 
@@ -295,10 +223,7 @@ contract PlearnRouter01 is IPlearnRouter01 {
         uint256 deadline
     ) external override ensure(deadline) returns (uint256[] memory amounts) {
         amounts = PlearnLibrary.getAmountsOut(factory, amountIn, path);
-        require(
-            amounts[amounts.length - 1] >= amountOutMin,
-            "PlearnRouter: INSUFFICIENT_OUTPUT_AMOUNT"
-        );
+        require(amounts[amounts.length - 1] >= amountOutMin, "PlearnRouter: INSUFFICIENT_OUTPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
@@ -316,10 +241,7 @@ contract PlearnRouter01 is IPlearnRouter01 {
         uint256 deadline
     ) external override ensure(deadline) returns (uint256[] memory amounts) {
         amounts = PlearnLibrary.getAmountsIn(factory, amountOut, path);
-        require(
-            amounts[0] <= amountInMax,
-            "PlearnRouter: EXCESSIVE_INPUT_AMOUNT"
-        );
+        require(amounts[0] <= amountInMax, "PlearnRouter: EXCESSIVE_INPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
@@ -334,26 +256,12 @@ contract PlearnRouter01 is IPlearnRouter01 {
         address[] calldata path,
         address to,
         uint256 deadline
-    )
-        external
-        payable
-        override
-        ensure(deadline)
-        returns (uint256[] memory amounts)
-    {
+    ) external payable override ensure(deadline) returns (uint256[] memory amounts) {
         require(path[0] == WETH, "PlearnRouter: INVALID_PATH");
         amounts = PlearnLibrary.getAmountsOut(factory, msg.value, path);
-        require(
-            amounts[amounts.length - 1] >= amountOutMin,
-            "PlearnRouter: INSUFFICIENT_OUTPUT_AMOUNT"
-        );
-        IWETH(WETH).deposit{value: amounts[0]}();
-        assert(
-            IWETH(WETH).transfer(
-                PlearnLibrary.pairFor(factory, path[0], path[1]),
-                amounts[0]
-            )
-        );
+        require(amounts[amounts.length - 1] >= amountOutMin, "PlearnRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        IWETH(WETH).deposit{ value: amounts[0] }();
+        assert(IWETH(WETH).transfer(PlearnLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);
     }
 
@@ -366,10 +274,7 @@ contract PlearnRouter01 is IPlearnRouter01 {
     ) external override ensure(deadline) returns (uint256[] memory amounts) {
         require(path[path.length - 1] == WETH, "PlearnRouter: INVALID_PATH");
         amounts = PlearnLibrary.getAmountsIn(factory, amountOut, path);
-        require(
-            amounts[0] <= amountInMax,
-            "PlearnRouter: EXCESSIVE_INPUT_AMOUNT"
-        );
+        require(amounts[0] <= amountInMax, "PlearnRouter: EXCESSIVE_INPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
@@ -390,10 +295,7 @@ contract PlearnRouter01 is IPlearnRouter01 {
     ) external override ensure(deadline) returns (uint256[] memory amounts) {
         require(path[path.length - 1] == WETH, "PlearnRouter: INVALID_PATH");
         amounts = PlearnLibrary.getAmountsOut(factory, amountIn, path);
-        require(
-            amounts[amounts.length - 1] >= amountOutMin,
-            "PlearnRouter: INSUFFICIENT_OUTPUT_AMOUNT"
-        );
+        require(amounts[amounts.length - 1] >= amountOutMin, "PlearnRouter: INSUFFICIENT_OUTPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
@@ -410,29 +312,14 @@ contract PlearnRouter01 is IPlearnRouter01 {
         address[] calldata path,
         address to,
         uint256 deadline
-    )
-        external
-        payable
-        override
-        ensure(deadline)
-        returns (uint256[] memory amounts)
-    {
+    ) external payable override ensure(deadline) returns (uint256[] memory amounts) {
         require(path[0] == WETH, "PlearnRouter: INVALID_PATH");
         amounts = PlearnLibrary.getAmountsIn(factory, amountOut, path);
-        require(
-            amounts[0] <= msg.value,
-            "PlearnRouter: EXCESSIVE_INPUT_AMOUNT"
-        );
-        IWETH(WETH).deposit{value: amounts[0]}();
-        assert(
-            IWETH(WETH).transfer(
-                PlearnLibrary.pairFor(factory, path[0], path[1]),
-                amounts[0]
-            )
-        );
+        require(amounts[0] <= msg.value, "PlearnRouter: EXCESSIVE_INPUT_AMOUNT");
+        IWETH(WETH).deposit{ value: amounts[0] }();
+        assert(IWETH(WETH).transfer(PlearnLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);
-        if (msg.value > amounts[0])
-            TransferHelper.safeTransferETH(msg.sender, msg.value - amounts[0]); // refund dust eth, if any
+        if (msg.value > amounts[0]) TransferHelper.safeTransferETH(msg.sender, msg.value - amounts[0]); // refund dust eth, if any
     }
 
     function quote(
@@ -449,13 +336,7 @@ contract PlearnRouter01 is IPlearnRouter01 {
         uint256 reserveOut,
         uint256 swapFee
     ) public pure override returns (uint256 amountOut) {
-        return
-            PlearnLibrary.getAmountOut(
-                amountIn,
-                reserveIn,
-                reserveOut,
-                swapFee
-            );
+        return PlearnLibrary.getAmountOut(amountIn, reserveIn, reserveOut, swapFee);
     }
 
     function getAmountIn(
@@ -464,13 +345,7 @@ contract PlearnRouter01 is IPlearnRouter01 {
         uint256 reserveOut,
         uint256 swapFee
     ) public pure override returns (uint256 amountIn) {
-        return
-            PlearnLibrary.getAmountOut(
-                amountOut,
-                reserveIn,
-                reserveOut,
-                swapFee
-            );
+        return PlearnLibrary.getAmountOut(amountOut, reserveIn, reserveOut, swapFee);
     }
 
     function getAmountsOut(uint256 amountIn, address[] memory path)
