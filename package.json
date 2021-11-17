@@ -1,7 +1,7 @@
 {
   "name": "plearn-swap-periphery",
   "version": "1.0.0",
-  "description": "Peripheral smart contracts for interacting with Plean",
+  "description": "Peripheral smart contracts for interacting with Plearn",
   "engines": {
     "node": ">=10"
   },

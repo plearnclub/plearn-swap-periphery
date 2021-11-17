@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@plearn-libs/plearn-swap-core/contracts/interfaces/IPlearnFactory.sol";
@@ -12,24 +11,18 @@ import "./interfaces/IWETH.sol";
 import "./libraries/PlearnLibrary.sol";
 import "./libraries/TransferHelper.sol";
 
-contract PlearnRouter02 is IPlearnRouter02, OwnableUpgradeable {
+contract PlearnRouter02 is IPlearnRouter02 {
     using SafeMath for uint256;
 
-    address public override factory;
-    address public override WETH;
+    address public immutable override factory;
+    address public immutable override WETH;
 
     modifier ensure(uint256 deadline) {
         require(deadline >= block.timestamp, "PlearnRouter: EXPIRED");
         _;
     }
 
-    // constructor(address _factory, address _WETH) {
-    //     factory = _factory;
-    //     WETH = _WETH;
-    // }
-
-    function initialize(address _factory, address _WETH) public initializer {
-        __Ownable_init();
+    constructor(address _factory, address _WETH) {
         factory = _factory;
         WETH = _WETH;
     }
