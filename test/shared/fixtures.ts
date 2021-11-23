@@ -12,7 +12,7 @@ import WETH9 from '../../artifacts/contracts/test/WETH9.sol/WETH9.json'
 
 import UniswapV1Exchange from '../../buildV1/UniswapV1Exchange.json'
 import UniswapV1Factory from '../../buildV1/UniswapV1Factory.json'
-import PlearnRouter01 from '../../artifacts/contracts/PlearnRouter01.sol/PlearnRouter01.json'
+import PlearnRouter01 from '../../artifacts/contracts/test/PlearnRouter01.sol/PlearnRouter01.json'
 import PlearnRouter02 from '../../artifacts/contracts/test/PlearnRouter.sol/PlearnRouter.json'
 import PlearnMigrator from '../../artifacts/contracts/PlearnMigrator.sol/PlearnMigrator.json'
 import RouterEventEmitter from '../../artifacts/contracts/test/RouterEventEmitter.sol/RouterEventEmitter.json'
