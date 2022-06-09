@@ -3,7 +3,7 @@ import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
 
-import { mnemonic, bscScanApiKey } from "./secrets.json";
+import { mnemonic, mnemonicTestnet, bscScanApiKey } from "./secrets.json";
 
 export default {
   defaultNetwork: "hardhat",
@@ -17,7 +17,7 @@ export default {
       url: "https://data-seed-prebsc-2-s3.binance.org:8545",
       chainId: 97,
       gasPrice: 20000000000,
-      accounts: { mnemonic: mnemonic },
+      accounts: { mnemonic: mnemonicTestnet },
     },
     mainnet: {
       url: "https://bsc-dataseed.binance.org/",
