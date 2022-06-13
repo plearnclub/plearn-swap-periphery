@@ -37,7 +37,7 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
     }
 
     event SwapFailure(uint amountIn, uint amountOutMin, address[] path);
-    event RmoveLiquidityFailure(IPlearnPair pair, uint amount, uint amountAMin, uint amountBMin);
+    event RemoveLiquidityFailure(IPlearnPair pair, uint amount, uint amountAMin, uint amountBMin);
     event NewPlearnRouter(address indexed sender, address indexed router);
     event NewOperatorAddress(address indexed sender, address indexed operator);
     event NewPlearnBurnAddress(address indexed sender, address indexed burnAddress);
@@ -135,7 +135,7 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
         {
             // do nothing here
         } catch {
-            emit RmoveLiquidityFailure(info.pair, info.amount, info.amountAMin, info.amountBMin);
+            emit RemoveLiquidityFailure(info.pair, info.amount, info.amountAMin, info.amountBMin);
             require(ignoreError, "remove liquidity failed");
             // if one of the swap fails, we do NOT revert and carry on
         }
@@ -294,8 +294,8 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
             uint256 nextCursor
         )
     {
-        IPlearnFactory pcsFactory = IPlearnFactory(factory);
-        uint256 maxLength = pcsFactory.allPairsLength();
+        IPlearnFactory psFactory = IPlearnFactory(factory);
+        uint256 maxLength = psFactory.allPairsLength();
         uint256 length = size;
         if (cursor >= maxLength) {
             address[] memory emptyList;
@@ -307,7 +307,7 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
 
         address[] memory values = new address[](length);
         for (uint256 i = 0; i < length; ++i) {
-            address tempAddr = address(pcsFactory.allPairs(cursor+i));
+            address tempAddr = address(psFactory.allPairs(cursor+i));
             values[i] = tempAddr;
         }
 
