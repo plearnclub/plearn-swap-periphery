@@ -42,15 +42,12 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
     event NewOperatorAddress(address indexed sender, address indexed operator);
     event NewPlearnBurnAddress(address indexed sender, address indexed burnAddress);
     event NewPlearnTeamAddress(address indexed sender, address indexed teamAddress);
-    event NewPlearnBurnRate(address indexed sender, uint plearnBurnRate);
 
     address public plearn;
     IPlearnRouter02 public plearnRouter;
     address public operatorAddress; // address of the operator
     address public plearnBurnAddress;
     address public plearnTeamAddress;
-    uint public plearnBurnRate; // rate for burn (e.g. 200 = 2%, 150 = 1.50%)
-    uint constant public RATE_DENOMINATOR = 10000;
     uint constant UNLIMITED_APPROVAL_AMOUNT = type(uint256).max;
     mapping(address => bool) public validDestination;
     IWETH WETH;
@@ -69,7 +66,6 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
         address _operatorAddress,
         address _plearnBurnAddress,
         address _plearnTeamAddress,
-        uint _plearnBurnRate,
         address[] memory destinations
     )
         external
@@ -82,7 +78,6 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
         operatorAddress = _operatorAddress;
         plearnBurnAddress = _plearnBurnAddress;
         plearnTeamAddress = _plearnTeamAddress;
-        plearnBurnRate = _plearnBurnRate;
         for (uint256 i = 0; i < destinations.length; ++i)
         {
             validDestination[destinations[i]] = true;
@@ -187,11 +182,7 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
         onlyOwnerOrOperator
     {
         require (amount > 0, "invalid amount");
-        uint burnAmount = amount * plearnBurnRate / RATE_DENOMINATOR;
-        // The rest goes to the team wallet.
-        uint teamAmount = amount - burnAmount;
-        IERC20Upgradeable(plearn).safeTransfer(plearnBurnAddress, burnAmount);
-        IERC20Upgradeable(plearn).safeTransfer(plearnTeamAddress, teamAmount);
+        IERC20Upgradeable(plearn).safeTransfer(plearnBurnAddress, amount);
     }
 
     /**
@@ -239,16 +230,6 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
     function setPlearnTeamAddress(address _plearnTeamAddress) external onlyOwner {
         plearnTeamAddress = _plearnTeamAddress;
         emit NewPlearnTeamAddress(msg.sender, _plearnTeamAddress);
-    }
-
-    /**
-     * @notice Set percentage of $PLN being sent for burn
-     * @dev Callable by owner
-     */
-    function setPlearnBurnRate(uint _plearnBurnRate) external onlyOwner {
-        require(_plearnBurnRate < RATE_DENOMINATOR, "invalid rate");
-        plearnBurnRate = _plearnBurnRate;
-        emit NewPlearnBurnRate(msg.sender, _plearnBurnRate);
     }
 
     /**
