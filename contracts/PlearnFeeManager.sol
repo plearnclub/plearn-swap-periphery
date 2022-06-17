@@ -37,17 +37,17 @@ contract PlearnFeeManager is Ownable {
     uint256 public PRECISION_FACTOR = 1000000000000;
 
     constructor(
-        address _plearn,
-        address _plearnFeeHandler,
-        address _plearnRouter,
+        IERC20 _plearn,
+        IPlearnFeeHandler _plearnFeeHandler,
+        IPlearnRouter02 _plearnRouter,
         address _plearnTeamAddress,
         uint _plearnBurnRate,
         uint _slippageTolerance,
         uint _minimumPlearn
     ) {
-        plearn = IERC20(_plearn);
-        plearnFeeHandler = IPlearnFeeHandler(_plearnFeeHandler);
-        plearnRouter = IPlearnRouter02(_plearnRouter);
+        plearn = _plearn;
+        plearnFeeHandler = _plearnFeeHandler;
+        plearnRouter = _plearnRouter;
         plearnTeamAddress = _plearnTeamAddress;
         plearnBurnRate = _plearnBurnRate;
         slippageTolerance = _slippageTolerance;
@@ -111,6 +111,20 @@ contract PlearnFeeManager is Ownable {
         plearnFeeHandler.sendPlearn(plearnAmount);
     }
 
+    /**
+     * @notice Send LP tokens to specified wallets(fee handler and team)
+     * @dev Callable by owner
+     */
+    function sendLP(IPlearnPair pair) internal onlyOwner {
+        uint lpAmount = pair.balanceOf(address(this));
+        require (lpAmount > 0, "invalid amount");
+        uint burnAmount = lpAmount * plearnBurnRate / RATE_DENOMINATOR;
+        // The rest goes to the team wallet.
+        uint teamAmount = lpAmount - burnAmount;
+        IERC20(address(pair)).safeTransfer(address(plearnFeeHandler), burnAmount);
+        IERC20(address(pair)).safeTransfer(plearnTeamAddress, teamAmount);
+    }
+
 
     /**
      * @notice Set address for `plearn fee handler`
@@ -138,20 +152,6 @@ contract PlearnFeeManager is Ownable {
         require(_plearnBurnRate < RATE_DENOMINATOR, "invalid rate");
         plearnBurnRate = _plearnBurnRate;
         emit NewPlearnBurnRate(msg.sender, _plearnBurnRate);
-    }
-
-    /**
-     * @notice Send LP tokens to specified wallets(fee handler and team)
-     * @dev Callable by owner
-     */
-    function sendLP(IPlearnPair pair) internal onlyOwner {
-        uint lpAmount = pair.balanceOf(address(this));
-        require (lpAmount > 0, "invalid amount");
-        uint burnAmount = lpAmount * plearnBurnRate / RATE_DENOMINATOR;
-        // The rest goes to the team wallet.
-        uint teamAmount = lpAmount - burnAmount;
-        IERC20(address(pair)).safeTransfer(address(plearnFeeHandler), burnAmount);
-        IERC20(address(pair)).safeTransfer(plearnTeamAddress, teamAmount);
     }
 
     /**
