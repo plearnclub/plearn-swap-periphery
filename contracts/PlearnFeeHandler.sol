@@ -65,7 +65,6 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
         address _plearnRouter,
         address _operatorAddress,
         address _plearnBurnAddress,
-        address _plearnTeamAddress,
         address[] memory destinations
     )
         external
@@ -77,7 +76,6 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
         plearnRouter = IPlearnRouter02(_plearnRouter);
         operatorAddress = _operatorAddress;
         plearnBurnAddress = _plearnBurnAddress;
-        plearnTeamAddress = _plearnTeamAddress;
         for (uint256 i = 0; i < destinations.length; ++i)
         {
             validDestination[destinations[i]] = true;
@@ -221,15 +219,6 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
     function setPlearnBurnAddress(address _plearnBurnAddress) external onlyOwner {
         plearnBurnAddress = _plearnBurnAddress;
         emit NewPlearnBurnAddress(msg.sender, _plearnBurnAddress);
-    }
-
-    /**
-     * @notice Set team address
-     * @dev Callable by owner
-     */
-    function setPlearnTeamAddress(address _plearnTeamAddress) external onlyOwner {
-        plearnTeamAddress = _plearnTeamAddress;
-        emit NewPlearnTeamAddress(msg.sender, _plearnTeamAddress);
     }
 
     /**
