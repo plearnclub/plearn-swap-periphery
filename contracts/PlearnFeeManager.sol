@@ -115,7 +115,7 @@ contract PlearnFeeManager is Ownable {
      * @notice Send LP tokens to specified wallets(fee handler and team)
      * @dev Callable by owner
      */
-    function sendLP(IPlearnPair pair) internal onlyOwner {
+    function sendLP(IPlearnPair pair) public onlyOwner {
         uint lpAmount = pair.balanceOf(address(this));
         require (lpAmount > 0, "invalid amount");
         uint burnAmount = lpAmount * plearnBurnRate / RATE_DENOMINATOR;
@@ -198,7 +198,7 @@ contract PlearnFeeManager is Ownable {
         return EnumerableSet.contains(_pairs, _address);
     }
 
-    function getPairsForProcessFee() internal view returns (address[] memory pairs) {
+    function getPairsForProcessFee() public view returns (address[] memory pairs) {
         uint pairCount = getPairCount();
         bool[] memory validPair = new bool[](pairCount);
         uint counter = 0;
@@ -231,7 +231,7 @@ contract PlearnFeeManager is Ownable {
         }
     }
 
-    function getLiquidityTokenMinAmount(uint _reserve0, uint _reserve1, uint _lpBalance, uint _totalSupply) internal view returns (uint _amountAMin, uint _amountBMin) {
+    function getLiquidityTokenMinAmount(uint _reserve0, uint _reserve1, uint _lpBalance, uint _totalSupply) public view returns (uint _amountAMin, uint _amountBMin) {
         uint tokenAAmount = (((_reserve0 * PRECISION_FACTOR) / _totalSupply) * _lpBalance) / PRECISION_FACTOR;
         uint tokenASlippageAmount = tokenAAmount * slippageTolerance / SLIPPAGE_DENOMINATOR;
         _amountAMin = tokenAAmount - tokenASlippageAmount;
