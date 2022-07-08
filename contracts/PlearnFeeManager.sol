@@ -59,13 +59,12 @@ contract PlearnFeeManager is Ownable {
      * @dev Callable by owner
      */
     function processAllFee(bool ignoreError) external onlyOwner {
-        address[] memory pairs = getPairsForProcessFee();
+        IPlearnPair[] memory pairs = getPairsForProcessFee();
         IPlearnFeeHandler.RemoveLiquidityInfo[] memory liquidityList = new IPlearnFeeHandler.RemoveLiquidityInfo[](pairs.length);
         IPlearnFeeHandler.SwapInfo[] memory swapList = new IPlearnFeeHandler.SwapInfo[](pairs.length);
 
         for (uint256 i = 0; i < pairs.length; ++i) {
-            address pairAddress = pairs[i];
-            IPlearnPair pair = IPlearnPair(pairAddress);
+            IPlearnPair pair =  pairs[i];
             uint lpBalance = pair.balanceOf(address(this));
             uint totalSupply = pair.totalSupply();
             uint burnAmount = lpBalance * plearnBurnRate / RATE_DENOMINATOR;
@@ -84,21 +83,9 @@ contract PlearnFeeManager is Ownable {
         plearnFeeHandler.processFee(liquidityList, new IPlearnFeeHandler.SwapInfo[](0), ignoreError);
 
         for (uint256 i = 0; i < pairs.length; ++i) {            
-            address pairAddress = pairs[i];
-            IPlearnPair pair = IPlearnPair(pairAddress);
-            address token0 = pair.token0();
-            address token1 = pair.token1();
+            IPlearnPair pair =  pairs[i];
 
-            address tokenIn = token0 == address(plearn) ? address(token1) : address(token0);
-            address tokenOut = token0 == address(plearn) ? address(token0) : address(token1);
-            address[] memory path = new address[](2);
-            path[0] = tokenIn;
-            path[1] = tokenOut;
-            uint amountIn = IERC20(tokenIn).balanceOf(address(plearnFeeHandler));
-
-            uint[] memory swapAmountOut = plearnRouter.getAmountsOut(amountIn, path);
-            uint swapSlippageAmount = swapAmountOut[1] * slippageTolerance / SLIPPAGE_DENOMINATOR;
-            uint amountOutMin = swapAmountOut[1] - swapSlippageAmount;
+            (uint amountIn, uint amountOutMin, address[] memory path) = getSwapInfo(pair);
             swapList[i] = IPlearnFeeHandler.SwapInfo({
                 amountIn: amountIn,
                 amountOutMin: amountOutMin,
@@ -198,9 +185,9 @@ contract PlearnFeeManager is Ownable {
         return EnumerableSet.contains(_pairs, _address);
     }
 
-    function getPairsForProcessFee() public view returns (address[] memory pairs) {
+    function getPairsForProcessFee() public view returns (IPlearnPair[] memory pairs) {
         uint pairCount = getPairCount();
-        bool[] memory validPair = new bool[](pairCount);
+        IPlearnPair[] memory validPairs = new IPlearnPair[](pairCount);
         uint counter = 0;
 
         for (uint256 i = 0; i < pairCount; ++i) {
@@ -214,21 +201,15 @@ contract PlearnFeeManager is Ownable {
                 (uint amountAMin, uint amountBMin) = getLiquidityTokenMinAmount(reserve0, reserve1, burnAmount, totalSupply);
                 uint plearnAmountOutMin = pair.token0() == address(plearn) ? amountAMin : amountBMin;
                 if (plearnAmountOutMin >= minimumPlearn) {
-                    validPair[i] = true;
-                    counter++;
-                } else {
-                    validPair[i] = false;
+                    validPairs[counter++] = pair;
                 }
             }
-        }
+        }        
         
-        pairs = new address[](counter);
-        for (uint256 i = 0; i < pairCount; ++i) {
-            address pairAddress = EnumerableSet.at(_pairs, i);
-            if (validPair[i]) {
-                pairs[i] = pairAddress;
-            }
-        }
+        pairs = new IPlearnPair[](counter);
+        for (uint256 i = 0; i < counter; ++i) {
+            pairs[i] = validPairs[i];
+        }        
     }
 
     function getLiquidityTokenMinAmount(uint _reserve0, uint _reserve1, uint _lpBalance, uint _totalSupply) public view returns (uint _amountAMin, uint _amountBMin) {
@@ -240,6 +221,23 @@ contract PlearnFeeManager is Ownable {
         uint tokenBAmount = (((_reserve1 * PRECISION_FACTOR) / _totalSupply) * _lpBalance) / PRECISION_FACTOR;
         uint tokenBSlippageAmount = tokenBAmount * slippageTolerance / SLIPPAGE_DENOMINATOR;
         _amountBMin = tokenBAmount - tokenBSlippageAmount;
+    }
+    
+    function getSwapInfo(IPlearnPair pair) public view returns (uint _amountIn, uint _amountOutMin, address[] memory _path) {
+        address token0 = pair.token0();
+        address token1 = pair.token1();
+        address tokenIn = token0 == address(plearn) ? address(token1) : address(token0);
+        address tokenOut = token0 == address(plearn) ? address(token0) : address(token1);
+        address[] memory path = new address[](2);
+        path[0] = tokenIn;
+        path[1] = tokenOut;
+        uint amountIn = IERC20(tokenIn).balanceOf(address(plearnFeeHandler));
+        uint[] memory swapAmountOut = plearnRouter.getAmountsOut(amountIn, path);
+        uint swapSlippageAmount = swapAmountOut[1] * slippageTolerance / SLIPPAGE_DENOMINATOR;
+
+        _amountIn = amountIn;
+        _amountOutMin = swapAmountOut[1] - swapSlippageAmount;
+        _path = path;
     }
 
 }
