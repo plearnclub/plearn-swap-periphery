@@ -63,7 +63,7 @@ contract PlearnFeeManager is Ownable {
         IPlearnFeeHandler.RemoveLiquidityInfo[] memory liquidityList = new IPlearnFeeHandler.RemoveLiquidityInfo[](pairs.length);
         IPlearnFeeHandler.SwapInfo[] memory swapList = new IPlearnFeeHandler.SwapInfo[](pairs.length);
 
-        for (uint256 i = 0; i < pairs.length; ++i) {
+        for (uint256 i = 0; i < pairs.length; i++) {
             IPlearnPair pair =  pairs[i];
             uint lpBalance = pair.balanceOf(address(this));
             uint totalSupply = pair.totalSupply();
@@ -82,7 +82,7 @@ contract PlearnFeeManager is Ownable {
 
         plearnFeeHandler.processFee(liquidityList, new IPlearnFeeHandler.SwapInfo[](0), ignoreError);
 
-        for (uint256 i = 0; i < pairs.length; ++i) {            
+        for (uint256 i = 0; i < pairs.length; i++) {            
             IPlearnPair pair =  pairs[i];
 
             (uint amountIn, uint amountOutMin, address[] memory path) = getSwapInfo(pair);
@@ -190,7 +190,7 @@ contract PlearnFeeManager is Ownable {
         IPlearnPair[] memory validPairs = new IPlearnPair[](pairCount);
         uint counter = 0;
 
-        for (uint256 i = 0; i < pairCount; ++i) {
+        for (uint256 i = 0; i < pairCount; i++) {
             address pairAddress = EnumerableSet.at(_pairs, i);
             IPlearnPair pair = IPlearnPair(pairAddress);
             uint lpBalance = pair.balanceOf(address(this));
@@ -207,7 +207,7 @@ contract PlearnFeeManager is Ownable {
         }        
         
         pairs = new IPlearnPair[](counter);
-        for (uint256 i = 0; i < counter; ++i) {
+        for (uint256 i = 0; i < counter; i++) {
             pairs[i] = validPairs[i];
         }        
     }
