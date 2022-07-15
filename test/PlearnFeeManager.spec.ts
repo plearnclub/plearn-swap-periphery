@@ -94,15 +94,11 @@ describe("PlearnFeeManager", () => {
   describe("getLiquidityTokenMinAmount", () => {
     it("should get (A token, B token) min amount 5.97 when remove liquidity 10 LP", async () => {
       // slippageTolerance = 0.5%
-      const LPAmount = expandTo18Decimals(6);
-      const totalSupply = await pair.totalSupply();
-
-      const [reserve0, reserve1] = await pair.getReserves();
+      await feeManager.sendLP(pair.address, overrides);
+      const LPBurnAmount = expandTo18Decimals(6);
       const [amountAMin, amountBMin] = await feeManager.getLiquidityTokenMinAmount(
-        reserve0,
-        reserve1,
-        LPAmount,
-        totalSupply,
+        pair.address,
+        LPBurnAmount
       );
       expect(amountAMin).to.eq(BigNumber.from("5970000000000000000"));
       expect(amountBMin).to.eq(BigNumber.from("5970000000000000000"));
