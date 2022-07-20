@@ -50,6 +50,8 @@ describe("PlearnFeeManager", () => {
     await PLN.approve(router.address, MaxUint256);
     await token1.approve(router.address, MaxUint256);
     await token2.approve(router.address, MaxUint256);
+    await pair.approve(feeManager.address, MaxUint256);
+    await pair2.approve(feeManager.address, MaxUint256);
 
     const plnAmount = expandTo18Decimals(10000);
     const token1Amount = expandTo18Decimals(10000);
@@ -65,8 +67,7 @@ describe("PlearnFeeManager", () => {
       MaxUint256,
       overrides,
     );
-    await pair.transfer(feeManager.address, expandTo18Decimals(10));
-
+    await pair.transfer(PLN.address, "9989999999999999999000"); // wallet lp balance = 10 LP
   
     await router.addLiquidity(
       PLN.address,
@@ -79,15 +80,15 @@ describe("PlearnFeeManager", () => {
       MaxUint256,
       overrides,
     );
-    await pair2.transfer(feeManager.address, expandTo18Decimals(5));
+    await pair2.transfer(PLN.address, "9994999999999999999000"); // wallet lp balance = 5 LP
   });
 
   describe("sendLP", () => {
-    it("should Team wallet get 4 LP, fee handler contract get 6 LP and feeManager contract LP balance 0 when processAllFee()", async () => {
+    it("should Team wallet get 4 LP, fee handler contract get 6 LP and wallet LP balance 0 when processAllFee()", async () => {
       await feeManager.sendLP(pair.address, overrides);
       expect(await pair.balanceOf(teamWallet.address)).to.eq(expandTo18Decimals(4));
       expect(await pair.balanceOf(feeHandler.address)).to.eq(expandTo18Decimals(6));
-      expect(await pair.balanceOf(feeManager.address)).to.eq(Zero);
+      expect(await pair.balanceOf(wallet.address)).to.eq(Zero);
     });
   });
 
@@ -115,10 +116,10 @@ describe("PlearnFeeManager", () => {
   });
 
   describe("processAllFee", () => {
-    it("should Team wallet get 4 LP and feeManager contract LP balance 0 when processAllFee() from 10 LP", async () => {
+    it("should Team wallet get 4 LP and wallet LP balance 0 when processAllFee() from 10 LP", async () => {
       await feeManager.processAllFee(false, overrides);
       expect(await pair.balanceOf(teamWallet.address)).to.eq(expandTo18Decimals(4));
-      expect(await pair.balanceOf(feeManager.address)).to.eq(Zero);
+      expect(await pair.balanceOf(wallet.address)).to.eq(Zero);
     });
 
     it("should not process fee because PLN after remove LP less than minimumPlearn", async () => {
@@ -147,6 +148,15 @@ describe("PlearnFeeManager", () => {
       expect(await feeManager.getPairCount()).to.eq(2);
     });
 
+  });
+
+  describe("Recovery", function () {
+    it("should get 10 LP from pair when recover 10 LP", async () => {
+      await pair.transfer(feeManager.address, expandTo18Decimals(10));
+      expect(await pair.balanceOf(feeManager.address)).to.eq(expandTo18Decimals(10));
+      await feeManager.recoverWrongTokens(pair.address, expandTo18Decimals(10), overrides);
+      expect(await pair.balanceOf(wallet.address)).to.eq(expandTo18Decimals(10));
+    });
   });
 
 });
