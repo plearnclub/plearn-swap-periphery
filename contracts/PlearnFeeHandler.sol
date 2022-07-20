@@ -41,13 +41,11 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
     event NewPlearnRouter(address indexed sender, address indexed router);
     event NewOperatorAddress(address indexed sender, address indexed operator);
     event NewPlearnBurnAddress(address indexed sender, address indexed burnAddress);
-    event NewPlearnTeamAddress(address indexed sender, address indexed teamAddress);
 
     address public plearn;
     IPlearnRouter02 public plearnRouter;
     address public operatorAddress; // address of the operator
     address public plearnBurnAddress;
-    address public plearnTeamAddress;
     uint constant UNLIMITED_APPROVAL_AMOUNT = type(uint256).max;
     mapping(address => bool) public validDestination;
     IWETH WETH;
