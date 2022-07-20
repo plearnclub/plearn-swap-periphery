@@ -21,6 +21,7 @@ contract PlearnFeeManager is Ownable {
     event NewPlearnFeeHandlerAddress(address indexed sender, address indexed feeHandlerAddress);
     event NewPlearnTeamAddress(address indexed sender, address indexed teamAddress);
     event NewPlearnBurnRate(address indexed sender, uint plearnBurnRate);
+    event AdminTokenRecovery(address tokenRecovered, uint256 amount);
 
     IERC20 public plearn;
     IPlearnRouter02 public plearnRouter;
@@ -95,13 +96,26 @@ contract PlearnFeeManager is Ownable {
      * @dev Callable by owner
      */
     function sendLP(IPlearnPair pair) public onlyOwner {
-        uint lpAmount = pair.balanceOf(address(this));
+        uint lpAmount = pair.balanceOf(address(msg.sender));
         require (lpAmount > 0, "invalid amount");
         uint burnAmount = lpAmount * plearnBurnRate / RATE_DENOMINATOR;
         // The rest goes to the team wallet.
         uint teamAmount = lpAmount - burnAmount;
-        IERC20(address(pair)).safeTransfer(address(plearnFeeHandler), burnAmount);
-        IERC20(address(pair)).safeTransfer(plearnTeamAddress, teamAmount);
+        IERC20(address(pair)).safeTransferFrom(address(msg.sender), address(plearnFeeHandler), burnAmount);
+        IERC20(address(pair)).safeTransferFrom(address(msg.sender), plearnTeamAddress, teamAmount);
+    }
+
+
+    /**
+     * @notice It allows the owner to recover wrong tokens sent to the contract
+     * @param _tokenAddress: the address of the token to withdraw
+     * @param _tokenAmount: the number of tokens to withdraw
+     * @dev This function is only callable by owner.
+     */
+    function recoverWrongTokens(address _tokenAddress, uint256 _tokenAmount) external onlyOwner {
+        IERC20(_tokenAddress).safeTransfer(address(msg.sender), _tokenAmount);
+
+        emit AdminTokenRecovery(_tokenAddress, _tokenAmount);
     }
 
 
@@ -185,7 +199,7 @@ contract PlearnFeeManager is Ownable {
         for (uint256 i = 0; i < pairCount; i++) {
             address pairAddress = EnumerableSet.at(_pairs, i);
             IPlearnPair pair = IPlearnPair(pairAddress);
-            uint lpBalance = pair.balanceOf(address(this));
+            uint lpBalance = pair.balanceOf(address(msg.sender));
             uint lpBurnAmount = lpBalance * plearnBurnRate / RATE_DENOMINATOR;
             if (lpBurnAmount > 0) {
                 (uint amountAMin, uint amountBMin) = getLiquidityTokenMinAmount(pair, lpBurnAmount);
