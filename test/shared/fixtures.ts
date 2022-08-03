@@ -17,7 +17,7 @@ import PlearnRouter02 from "../../artifacts/contracts/test/PlearnRouter.sol/Plea
 import PlearnMigrator from "../../artifacts/contracts/PlearnMigrator.sol/PlearnMigrator.json";
 import RouterEventEmitter from "../../artifacts/contracts/test/RouterEventEmitter.sol/RouterEventEmitter.json";
 import PlearnFeeHandler from "../../artifacts/contracts/test/PlearnFeeHandler.sol/PlearnFeeHandler.json";
-import PlearnFeeManager from "../../artifacts/contracts/PlearnFeeManager.sol/PlearnFeeManager.json";
+import PlearnFeeManager from "../../artifacts/contracts/test/PlearnFeeManager.sol/PlearnFeeManager.json";
 
 const overrides = {
   gasLimit: 9999999,
