@@ -191,7 +191,7 @@ contract PlearnFeeManager is Ownable {
         return EnumerableSet.contains(_pairs, _address);
     }
 
-    function getPairsForProcessFee() public view returns (IPlearnPair[] memory pairs) {
+    function getPairsForProcessFee() private view returns (IPlearnPair[] memory pairs) {
         uint pairCount = getPairCount();
         IPlearnPair[] memory validPairs = new IPlearnPair[](pairCount);
         uint counter = 0;
@@ -230,7 +230,7 @@ contract PlearnFeeManager is Ownable {
         _amountBMin = tokenBAmount - tokenBSlippageAmount;
     }
     
-    function getSwapInfo(IPlearnPair pair) public view returns (IPlearnFeeHandler.SwapInfo memory _swapInfo) {
+    function getSwapInfo(IPlearnPair pair) private view returns (IPlearnFeeHandler.SwapInfo memory _swapInfo) {
         address token0 = pair.token0();
         address token1 = pair.token1();
         require(token0 == address(plearn) || token1 == address(plearn) , "invalid pair");
