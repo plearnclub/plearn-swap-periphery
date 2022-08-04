@@ -53,6 +53,23 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
     // Maximum amount of BNB to top-up operator
     uint public operatorTopUpLimit;
 
+     // Copied from: @openzeppelin/contracts/security/ReentrancyGuard.sol
+    uint256 private constant _NOT_ENTERED = 0;
+    uint256 private constant _ENTERED = 1;
+
+    uint256 private _status;
+
+    modifier nonReentrant() {
+        require(_status != _ENTERED, "ReentrancyGuard: reentrant call");
+
+        _status = _ENTERED;
+
+        _;
+
+        _status = _NOT_ENTERED;
+    }
+
+
     modifier onlyOwnerOrOperator() {
         require(msg.sender == owner() || msg.sender == operatorAddress, "Not owner/operator");
         _;
@@ -217,6 +234,29 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
     function setPlearnBurnAddress(address _plearnBurnAddress) external onlyOwner {
         plearnBurnAddress = _plearnBurnAddress;
         emit NewPlearnBurnAddress(msg.sender, _plearnBurnAddress);
+    }
+
+    /**
+     * @notice Withdraw tokens from this smart contract
+     * @dev Callable by owner
+     */
+    function withdraw(
+        address tokenAddr,
+        address payable to,
+        uint amount
+    )
+        external
+        nonReentrant
+        onlyOwner
+    {
+        require(to != address(0), "invalid recipient");
+        if (tokenAddr == address(0)) {
+            (bool success, ) = to.call{ value: amount }("");
+            require(success, "transfer BNB failed");
+        }
+        else {
+            IERC20Upgradeable(tokenAddr).safeTransfer(to, amount);
+        }
     }
 
     /**
