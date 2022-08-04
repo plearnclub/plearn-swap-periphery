@@ -59,7 +59,7 @@ contract FeeManager is Ownable {
      * @notice Sell all LP token from _pairs, buy back $PLN.
      * @dev Callable by owner
      */
-    function processAllFee(bool ignoreError) external onlyOwner {
+    function processAllFee(bool ignoreError) external {
         IPlearnPair[] memory pairs = getPairsForProcessFee();
         IPlearnFeeHandler.RemoveLiquidityInfo[] memory liquidityList = new IPlearnFeeHandler.RemoveLiquidityInfo[](pairs.length);
         IPlearnFeeHandler.SwapInfo[] memory swapList = new IPlearnFeeHandler.SwapInfo[](pairs.length);
@@ -95,7 +95,7 @@ contract FeeManager is Ownable {
      * @notice Send LP tokens to specified wallets(fee handler and team)
      * @dev Callable by owner
      */
-    function sendLP(IPlearnPair pair) public onlyOwner {
+    function sendLP(IPlearnPair pair) public {
         uint lpAmount = pair.balanceOf(address(msg.sender));
         require (lpAmount > 0, "invalid amount");
         uint burnAmount = lpAmount * plearnBurnRate / RATE_DENOMINATOR;
