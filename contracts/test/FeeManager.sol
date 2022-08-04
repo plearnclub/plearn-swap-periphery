@@ -5,11 +5,11 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import './interfaces/IPlearnRouter02.sol';
-import './interfaces/IPlearnFeeHandler.sol';
+import '../interfaces/IPlearnRouter02.sol';
+import '../interfaces/IPlearnFeeHandler.sol';
 import "@plearn-libs/plearn-swap-core/contracts/interfaces/IPlearnPair.sol";
 
-contract PlearnFeeManager is Ownable {
+contract FeeManager is Ownable {
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -191,7 +191,7 @@ contract PlearnFeeManager is Ownable {
         return EnumerableSet.contains(_pairs, _address);
     }
 
-    function getPairsForProcessFee() private view returns (IPlearnPair[] memory pairs) {
+    function getPairsForProcessFee() public view returns (IPlearnPair[] memory pairs) {
         uint pairCount = getPairCount();
         IPlearnPair[] memory validPairs = new IPlearnPair[](pairCount);
         uint counter = 0;
@@ -230,7 +230,7 @@ contract PlearnFeeManager is Ownable {
         _amountBMin = tokenBAmount - tokenBSlippageAmount;
     }
     
-    function getSwapInfo(IPlearnPair pair) private view returns (IPlearnFeeHandler.SwapInfo memory _swapInfo) {
+    function getSwapInfo(IPlearnPair pair) public view returns (IPlearnFeeHandler.SwapInfo memory _swapInfo) {
         address token0 = pair.token0();
         address token1 = pair.token1();
         require(token0 == address(plearn) || token1 == address(plearn) , "invalid pair");

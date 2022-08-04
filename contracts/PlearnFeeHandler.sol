@@ -41,22 +41,34 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
     event NewPlearnRouter(address indexed sender, address indexed router);
     event NewOperatorAddress(address indexed sender, address indexed operator);
     event NewPlearnBurnAddress(address indexed sender, address indexed burnAddress);
-    event NewPlearnTeamAddress(address indexed sender, address indexed teamAddress);
-    event NewPlearnBurnRate(address indexed sender, uint plearnBurnRate);
 
     address public plearn;
     IPlearnRouter02 public plearnRouter;
     address public operatorAddress; // address of the operator
     address public plearnBurnAddress;
-    address public plearnTeamAddress;
-    uint public plearnBurnRate; // rate for burn (e.g. 200 = 2%, 150 = 1.50%)
-    uint constant public RATE_DENOMINATOR = 10000;
     uint constant UNLIMITED_APPROVAL_AMOUNT = type(uint256).max;
     mapping(address => bool) public validDestination;
     IWETH WETH;
 
     // Maximum amount of BNB to top-up operator
     uint public operatorTopUpLimit;
+
+     // Copied from: @openzeppelin/contracts/security/ReentrancyGuard.sol
+    uint256 private constant _NOT_ENTERED = 0;
+    uint256 private constant _ENTERED = 1;
+
+    uint256 private _status;
+
+    modifier nonReentrant() {
+        require(_status != _ENTERED, "ReentrancyGuard: reentrant call");
+
+        _status = _ENTERED;
+
+        _;
+
+        _status = _NOT_ENTERED;
+    }
+
 
     modifier onlyOwnerOrOperator() {
         require(msg.sender == owner() || msg.sender == operatorAddress, "Not owner/operator");
@@ -68,8 +80,6 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
         address _plearnRouter,
         address _operatorAddress,
         address _plearnBurnAddress,
-        address _plearnTeamAddress,
-        uint _plearnBurnRate,
         address[] memory destinations
     )
         external
@@ -81,8 +91,6 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
         plearnRouter = IPlearnRouter02(_plearnRouter);
         operatorAddress = _operatorAddress;
         plearnBurnAddress = _plearnBurnAddress;
-        plearnTeamAddress = _plearnTeamAddress;
-        plearnBurnRate = _plearnBurnRate;
         for (uint256 i = 0; i < destinations.length; ++i)
         {
             validDestination[destinations[i]] = true;
@@ -187,11 +195,7 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
         onlyOwnerOrOperator
     {
         require (amount > 0, "invalid amount");
-        uint burnAmount = amount * plearnBurnRate / RATE_DENOMINATOR;
-        // The rest goes to the team wallet.
-        uint teamAmount = amount - burnAmount;
-        IERC20Upgradeable(plearn).safeTransfer(plearnBurnAddress, burnAmount);
-        IERC20Upgradeable(plearn).safeTransfer(plearnTeamAddress, teamAmount);
+        IERC20Upgradeable(plearn).safeTransfer(plearnBurnAddress, amount);
     }
 
     /**
@@ -233,22 +237,26 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
     }
 
     /**
-     * @notice Set team address
+     * @notice Withdraw tokens from this smart contract
      * @dev Callable by owner
      */
-    function setPlearnTeamAddress(address _plearnTeamAddress) external onlyOwner {
-        plearnTeamAddress = _plearnTeamAddress;
-        emit NewPlearnTeamAddress(msg.sender, _plearnTeamAddress);
-    }
-
-    /**
-     * @notice Set percentage of $PLN being sent for burn
-     * @dev Callable by owner
-     */
-    function setPlearnBurnRate(uint _plearnBurnRate) external onlyOwner {
-        require(_plearnBurnRate < RATE_DENOMINATOR, "invalid rate");
-        plearnBurnRate = _plearnBurnRate;
-        emit NewPlearnBurnRate(msg.sender, _plearnBurnRate);
+    function withdraw(
+        address tokenAddr,
+        address payable to,
+        uint amount
+    )
+        external
+        nonReentrant
+        onlyOwner
+    {
+        require(to != address(0), "invalid recipient");
+        if (tokenAddr == address(0)) {
+            (bool success, ) = to.call{ value: amount }("");
+            require(success, "transfer BNB failed");
+        }
+        else {
+            IERC20Upgradeable(tokenAddr).safeTransfer(to, amount);
+        }
     }
 
     /**
