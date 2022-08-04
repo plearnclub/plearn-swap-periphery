@@ -9,7 +9,7 @@ import '../interfaces/IPlearnRouter02.sol';
 import '../interfaces/IPlearnFeeHandler.sol';
 import "@plearn-libs/plearn-swap-core/contracts/interfaces/IPlearnPair.sol";
 
-contract PlearnFeeManager is Ownable {
+contract FeeManager is Ownable {
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.AddressSet;
 

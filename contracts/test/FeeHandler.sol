@@ -9,7 +9,7 @@ import '../interfaces/IPlearnRouter02.sol';
 import "@plearn-libs/plearn-swap-core/contracts/interfaces/IPlearnPair.sol";
 import "@plearn-libs/plearn-swap-core/contracts/interfaces/IPlearnFactory.sol";
 
-contract PlearnFeeHandler is Ownable {
+contract FeeHandler is Ownable {
     using SafeERC20 for IERC20;
 
     struct RemoveLiquidityInfo {
@@ -51,6 +51,22 @@ contract PlearnFeeHandler is Ownable {
 
     // Maximum amount of BNB to top-up operator
     uint public operatorTopUpLimit;
+
+    // Copied from: @openzeppelin/contracts/security/ReentrancyGuard.sol
+    uint256 private constant _NOT_ENTERED = 0;
+    uint256 private constant _ENTERED = 1;
+
+    uint256 private _status;
+
+    modifier nonReentrant() {
+        require(_status != _ENTERED, "ReentrancyGuard: reentrant call");
+
+        _status = _ENTERED;
+
+        _;
+
+        _status = _NOT_ENTERED;
+    }
 
     modifier onlyOwnerOrOperator() {
         require(msg.sender == owner() || msg.sender == operatorAddress, "Not owner/operator");
@@ -211,6 +227,29 @@ contract PlearnFeeHandler is Ownable {
     function setPlearnBurnAddress(address _plearnBurnAddress) external onlyOwner {
         plearnBurnAddress = _plearnBurnAddress;
         emit NewPlearnBurnAddress(msg.sender, _plearnBurnAddress);
+    }
+
+    /**
+     * @notice Withdraw tokens from this smart contract
+     * @dev Callable by owner
+     */
+    function withdraw(
+        address tokenAddr,
+        address payable to,
+        uint amount
+    )
+        external
+        nonReentrant
+        onlyOwner
+    {
+        require(to != address(0), "invalid recipient");
+        if (tokenAddr == address(0)) {
+            (bool success, ) = to.call{ value: amount }("");
+            require(success, "transfer BNB failed");
+        }
+        else {
+            IERC20(tokenAddr).safeTransfer(to, amount);
+        }
     }
 
     /**

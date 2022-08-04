@@ -16,8 +16,8 @@ import PlearnRouter01 from "../../artifacts/contracts/test/PlearnRouter01.sol/Pl
 import PlearnRouter02 from "../../artifacts/contracts/test/PlearnRouter.sol/PlearnRouter.json";
 import PlearnMigrator from "../../artifacts/contracts/PlearnMigrator.sol/PlearnMigrator.json";
 import RouterEventEmitter from "../../artifacts/contracts/test/RouterEventEmitter.sol/RouterEventEmitter.json";
-import PlearnFeeHandler from "../../artifacts/contracts/test/PlearnFeeHandler.sol/PlearnFeeHandler.json";
-import PlearnFeeManager from "../../artifacts/contracts/test/PlearnFeeManager.sol/PlearnFeeManager.json";
+import FeeHandler from "../../artifacts/contracts/test/FeeHandler.sol/FeeHandler.json";
+import FeeManager from "../../artifacts/contracts/test/FeeManager.sol/FeeManager.json";
 
 const overrides = {
   gasLimit: 9999999,
@@ -149,13 +149,13 @@ export async function v3Fixture(
   // deploy fee handler and fee manager
   const feeHandler = await deployContract(
     wallet,
-    PlearnFeeHandler,
+    FeeHandler,
     [tokenA.address, router02.address, wallet.address, burnWallet.address, [tokenA.address, tokenB.address, tokenC.address]],
     overrides,
   );
   const feeManager = await deployContract(
     wallet,
-    PlearnFeeManager,
+    FeeManager,
     [tokenA.address, feeHandler.address, router02.address, teamWallet.address, 6000, 50, 0],
     overrides,
   );
