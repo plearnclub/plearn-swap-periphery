@@ -2,16 +2,15 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import './interfaces/IWETH.sol';
 import './interfaces/IPlearnRouter02.sol';
 import "@plearn-libs/plearn-swap-core/contracts/interfaces/IPlearnPair.sol";
 import "@plearn-libs/plearn-swap-core/contracts/interfaces/IPlearnFactory.sol";
 
-contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
+contract PlearnFeeHandler is Ownable {
+    using SafeERC20 for IERC20;
 
     struct RemoveLiquidityInfo {
         IPlearnPair pair;
@@ -75,18 +74,13 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
         _;
     }
 
-    function initialize(
+    constructor(
         address _plearn,
         address _plearnRouter,
         address _operatorAddress,
         address _plearnBurnAddress,
         address[] memory destinations
-    )
-        external
-        initializer
-    {
-        __Ownable_init();
-        __UUPSUpgradeable_init();
+    ) {
         plearn = _plearn;
         plearnRouter = IPlearnRouter02(_plearnRouter);
         operatorAddress = _operatorAddress;
@@ -127,7 +121,7 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
     {
         uint allowance = info.pair.allowance(address(this), address(plearnRouter));
         if (allowance < info.amount) {
-            IERC20Upgradeable(address(info.pair)).safeApprove(address(plearnRouter), UNLIMITED_APPROVAL_AMOUNT);
+            IERC20(address(info.pair)).safeApprove(address(plearnRouter), UNLIMITED_APPROVAL_AMOUNT);
         }
         address token0 = info.pair.token0();
         address token1 = info.pair.token1();
@@ -163,12 +157,12 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
         require(path.length > 1, "invalid path");
         require(validDestination[path[path.length - 1]], "invalid path");
         address token = path[0];
-        uint tokenBalance = IERC20Upgradeable(token).balanceOf(address(this));
+        uint tokenBalance = IERC20(token).balanceOf(address(this));
         amountIn = (amountIn > tokenBalance) ? tokenBalance : amountIn;
         // TODO: need to adjust `token0AmountOutMin` ?
-        uint allowance = IERC20Upgradeable(token).allowance(address(this), address(plearnRouter));
+        uint allowance = IERC20(token).allowance(address(this), address(plearnRouter));
         if (allowance < amountIn) {
-            IERC20Upgradeable(token).safeApprove(address(plearnRouter), UNLIMITED_APPROVAL_AMOUNT);
+            IERC20(token).safeApprove(address(plearnRouter), UNLIMITED_APPROVAL_AMOUNT);
         }
         try plearnRouter.swapExactTokensForTokensSupportingFeeOnTransferTokens(
                 amountIn,
@@ -195,7 +189,7 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
         onlyOwnerOrOperator
     {
         require (amount > 0, "invalid amount");
-        IERC20Upgradeable(plearn).safeTransfer(plearnBurnAddress, amount);
+        IERC20(plearn).safeTransfer(plearnBurnAddress, amount);
     }
 
     /**
@@ -255,7 +249,7 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
             require(success, "transfer BNB failed");
         }
         else {
-            IERC20Upgradeable(tokenAddr).safeTransfer(to, amount);
+            IERC20(tokenAddr).safeTransfer(to, amount);
         }
     }
 
@@ -347,5 +341,4 @@ contract PlearnFeeHandler is UUPSUpgradeable, OwnableUpgradeable {
 
     receive() external payable {}
     fallback() external payable {}
-    function _authorizeUpgrade(address) internal override onlyOwner {}
 }
