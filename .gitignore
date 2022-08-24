@@ -6,6 +6,7 @@ node_modules/
 
 #Deploy and config
 scripts/
+verify/
 secrets.json
 yarn.lock
 
