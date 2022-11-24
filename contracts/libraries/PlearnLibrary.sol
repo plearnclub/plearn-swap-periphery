@@ -29,7 +29,7 @@ library PlearnLibrary {
                             hex"ff",
                             factory,
                             keccak256(abi.encodePacked(token0, token1)),
-                            hex"e71a44db09287e8a6489d233a39d63469a5546c8220acf93128eb43cef7a8481" // init code hash
+                            hex"079b6364f955b4ff4bc32b48ca7a76270025e1ffbdd45e9e50a09d7044f9412e" // init code hash
                         )
                     )
                 )
